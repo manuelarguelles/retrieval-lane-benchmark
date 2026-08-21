@@ -90,16 +90,55 @@
         Of the 37 sources, 21 had an open-access PDF and 13 survived download and
         verification.</p>
     </div>
+
+    <div class="losa">
+      <h3 style="margin-bottom:.6rem">Access is not a property of the document</h3>
+      <p class="chico">This table went through three versions, and the first two were wrong
+        for the same reason. They said <em>"no access"</em> and <em>"closed"</em> — claims
+        about the world, written from what a program with no signed-in session managed to
+        fetch.</p>
+      <p class="chico" style="margin-top:.7rem">Both fell to someone checking <strong>a
+        single source by eye</strong>. The first time, a conference record marked "no access"
+        whose full article rendered on its own page. The second, one marked "closed" that
+        JSTOR serves in full on a free account — ten articles a month. Measured: that same
+        page returns <b class="mono">83</b> characters to an automated browser and the whole
+        article to a person with a session.</p>
+      <p class="chico" style="margin-top:.7rem">🔑 <strong>Access is a relation, not an
+        attribute:</strong> it depends on who is asking, with what session, from which
+        institution, from which country. A pipeline without credentials sees a more closed
+        world than the one that exists — and writing that down as the document's status
+        publishes your own limitation as a fact about the world.</p>
+      <p class="chico" style="margin-top:.7rem">So the column now says only <b>in the
+        corpus</b> or <b>not ingested</b>. Of the 24 not ingested, <strong>3 were read in
+        full by hand</strong> and 4 have a copy at a venue the identifier doesn't point to —
+        university repositories, JSTOR, PubMed. The corpus could grow without paying for a
+        subscription; by how much I don't know, and I'm not estimating it again without
+        looking.</p>
+      <p class="chico" style="margin-top:.7rem"><strong>Nothing was re-ingested</strong>:
+        changing the corpus would invalidate all 70 questions and every measurement here.</p>
+      <details>
+        <summary>Forensic detail · the auditor was wrong twice, too</summary>
+        <p class="chico dim">First version: it read only the main frame and classified a
+          conference record as "abstract only" at 2,167 characters. The full article sat
+          inside a cross-origin embedded frame. Second version: it entered the frames, but
+          still asked the identifier — which points at the publisher and its paywall —
+          instead of asking which other venues hold the work.</p>
+        <p class="chico dim" style="margin-top:.7rem">Three venues block automation with a
+          bot check or a 403 to a browser without a session. <strong>No attempt was made to
+          get around any of them.</strong> What was verified, was verified by reading it in
+          an ordinary browser, like any reader would.</p>
+      </details>
+    </div>
     <div class="filtros" role="group" aria-label="Filter sources">
       <button class="chip" data-eje="*" aria-pressed="true">all axes</button>
       <span id="ejes-chips"></span>
     </div>
     <div class="scroll losa"><table id="tabla-corpus">
       <caption class="chico dim" style="text-align:left;padding-bottom:.6rem">
-        <b>in the corpus</b> = PDF downloaded, verified and chunked. <b>open, not taken</b>
-        = an open version exists that ingestion never picked up. <b>partial</b> = the content
-        lives on the page rather than in a PDF. <b>closed</b> = no open version known.
-        <b>excluded</b> = downloaded, but turned out to be a one-page abstract.</caption>
+        Two states, because only two things are verifiable from this pipeline:
+        <b>in the corpus</b> = PDF downloaded, verified and chunked. <b>not ingested</b> = the
+        text wasn't obtained by automated means. What <em>a person</em> can read goes in the
+        notes, and only where it was checked by looking.</caption>
       <thead><tr><th>Source</th><th>Axis</th><th>Status</th><th>Link</th></tr></thead>
       <tbody></tbody>
     </table></div>

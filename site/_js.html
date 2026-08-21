@@ -30,15 +30,11 @@ barras($("#barras-literal"), [
 ], 70);
 
 /* ── corpus ─────────────────────────────────────────────────────────── */
-// What is known about access, at the confidence it was known. This column used to read
-// "no access" — a claim about the content, when the underlying data only spoke about the
-// PDF. See the audit note under the table.
+// Two states only, because only two things are verifiable from the pipeline. What a
+// person can read goes in the notes, and only where it was checked by looking.
 const ACCESO = {
-  "ingerido":          ["in the corpus",   "v-ok"],
-  "abierto-no-tomado": ["open, not taken", "v-mal"],
-  "parcial":           ["partial",         "v-neutro"],
-  "cerrado":           ["closed",          "v-neutro"],
-  "excluido":          ["excluded",        "v-mal"],
+  "ingerido":    ["in the corpus", "v-ok"],
+  "no-ingerido": ["not ingested",  "v-neutro"],
 };
 const EJE_EN = {
   "1 · La búsqueda inicial de antecedentes": "1 · Prior work",
@@ -52,16 +48,40 @@ const EJE_EN = {
   "9 · Lo que medimos nosotros": "9 · What we measure ourselves",
 };
 const eje = e => EJE_EN[e] || e;
-const NOTA_EN = {
-  "texto completo verificado a mano": "full text verified by hand",
-  "OpenAlex reporta PDF abierto en": "OpenAlex reports an open PDF at",
-  "hay una sede abierta, sin PDF directo": "an open venue exists, no direct PDF",
-  "recurso web: contenido en la página, no en PDF": "web resource: content on the page, not a PDF",
-  "descargó, pero era un resumen de una página": "downloaded, but it was a one-page abstract",
-  "caracteres": "characters", "otra sede": "another venue",
+// Los cinco recursos web no traían título bibliográfico: el que se ve lo escribimos
+// nosotros, así que también hay que traducirlo.
+const TITULO_EN = {
+  "Mercer IPE — metodología de valuación de puestos (sitio del proveedor)":
+    "Mercer IPE — job evaluation methodology (vendor site)",
+  "Korn Ferry — guía de evaluación de puestos (PDF del proveedor)":
+    "Korn Ferry — job evaluation guide (vendor PDF)",
+  "NeurIPS 2024 — Datasets and Benchmarks Track": "NeurIPS 2024 — Datasets and Benchmarks Track",
+  "ICML 2025 — póster": "ICML 2025 — poster",
+  "RAGAS — documentación de la métrica de fidelidad": "RAGAS — faithfulness metric documentation",
 };
-const traducirNota = n => n ? Object.entries(NOTA_EN)
-  .reduce((t,[es,en]) => t.replace(es,en), n) : n;
+const titulo = t => TITULO_EN[t] || t;
+const NOTA_EN = {
+  "leído entero a mano": "read in full by hand",
+  "caracteres": "characters",
+  "acceso abierto pleno": "fully open access",
+  "leído entero a mano en JSTOR, que da 10 artículos por mes con cuenta gratuita":
+    "read in full by hand on JSTOR, which allows 10 articles a month on a free account",
+  "hay PDF abierto indexado en": "an open PDF is indexed at",
+  "la ingesta no lo tomó": "ingestion never took it",
+  "recurso web: el contenido está en la página, no en un PDF":
+    "web resource: the content is on the page, not in a PDF",
+  "descargó, pero era un resumen de una página": "downloaded, but it was a one-page abstract",
+  "otra sede": "another venue",
+  "repositorio de DePaul": "DePaul's repository",
+  "repositorio institucional de SMU": "SMU's institutional repository",
+  "ficha en PubMed": "a PubMed record",
+  "JSTOR · repositorio de CSUN": "JSTOR · CSUN's repository",
+  "también en": "also at",
+};
+// De la clave más larga a la más corta: si no, "leído entero a mano" se aplica primero y
+// la frase larga que lo contiene ya no coincide, dejando media oración sin traducir.
+const NOTA_ORD = Object.entries(NOTA_EN).sort((a, b) => b[0].length - a[0].length);
+const traducirNota = n => n ? NOTA_ORD.reduce((t, [es, en]) => t.split(es).join(en), n) : n;
 const tbodyC = $("#tabla-corpus tbody");
 let ejeSel = "*";
 $("#ejes-chips").innerHTML = D.corpus.ejes.map(e =>
@@ -71,8 +91,9 @@ function pintaCorpus(){
   tbodyC.innerHTML = fs.map(f => {
     const [txt, cls] = ACCESO[f.clase] || [f.clase,"v-neutro"];
     return `<tr>
-      <td>${esc(f.titulo)}${f.web?' <span class="chico dim">· web resource</span>':""}
-        ${f.nota?`<span class="chico dim" style="display:block">${esc(traducirNota(f.nota))}</span>`:""}</td>
+      <td>${esc(titulo(f.titulo))}${f.web?' <span class="chico dim">· web resource</span>':""}
+        ${f.nota?`<span class="chico dim" style="display:block">${esc(traducirNota(f.nota))}</span>`:""}
+        ${f.sede?`<span class="chico" style="display:block;color:var(--acento)">also at ${esc(traducirNota(f.sede))}</span>`:""}</td>
       <td class="chico dim">${esc(eje(f.eje))}</td>
       <td><span class="veredicto ${cls}">${esc(txt)}</span></td>
       <td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer" class="mono chico">open ↗</a>` : '<span class="dim chico">—</span>'}</td>
@@ -136,7 +157,7 @@ function pintaPanel(){
     <h3 style="margin:.4rem 0 .9rem">${esc(q.pregunta)}</h3>
     <p class="chico dim" style="margin-bottom:.35rem">Declared literal evidence · document ${esc(q.doc)}</p>
     <div class="pasaje"><mark>${esc(q.span)}</mark></div>
-    <p class="chico dim" style="margin:.9rem 0 .5rem">${esc((D.gold.titulos[q.doc]||"").slice(0,110))}…</p>
+    <p class="chico dim" style="margin:.9rem 0 .5rem">${esc(titulo(D.gold.titulos[q.doc]||"").slice(0,110))}…</p>
     <table style="margin-top:.6rem">
       <tr><td><b style="color:var(--ink)">Lane A</b> <span class="chico dim">hand-built</span></td>
           <td class="num">${slotTxt(q.a8)}</td></tr>

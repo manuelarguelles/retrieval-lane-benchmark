@@ -50,19 +50,39 @@ such selector exists.
 The page ships a simulator: move the split, and recall recomputes from each question's real
 measured positions.
 
-## A correction worth reading
+## Access is not a property of the document
 
-Sources that didn't make it into the corpus were listed as "no access". That status came
-from a service answering a narrower question — *is there an open-access PDF for this DOI?* —
-and a "no" there was stored as "the content can't be read".
+The corpus table went through three versions and the first two were wrong the same way. They
+said *"no access"* and *"closed"* — claims about the world, written from what a program with
+no signed-in session managed to fetch.
 
-Auditing all 23 with a real browser: **4 have an open version ingestion never took**, two
-verified by hand with the full article on screen. The corpus could grow ~30 % without paying
-for a single subscription. Nothing was re-ingested, because changing the corpus would
-invalidate all 70 questions and every measurement here.
+Both fell to someone checking **a single source by eye**. First, a conference record marked
+"no access" whose full article rendered on its own page — inside a cross-origin iframe my
+auditor never entered. Then one marked "closed" that JSTOR serves in full on a free account,
+ten articles a month.
 
-The auditor was wrong first, too: its initial version read only the main frame and reported
-"abstract only" for a page whose full article sat inside a cross-origin iframe.
+| Who asks JSTOR | What it returns |
+|---|---|
+| an automated browser, no session | **83 characters** |
+| a person with a free account | the full 10-page article |
+
+**Access is a relation, not an attribute.** It depends on who is asking, with what session,
+from which institution, from which country. A pipeline without credentials sees a more closed
+world than the one that exists — and writing that down as the document's status publishes
+your own limitation as a fact about the world.
+
+The second flaw was subtler: the auditor asked *where the DOI points* — the publisher and its
+paywall — instead of *which venues hold the work*. Querying every indexed location surfaces
+copies the DOI never mentions: university repositories at CSUN, DePaul and SMU, plus JSTOR
+and PubMed.
+
+So the status column now has two values only — `in the corpus` and `not ingested` — because
+those are the only two things this pipeline can verify. Of the 24 not ingested, 3 were read
+in full by hand and 4 have a copy elsewhere. How much the corpus could grow is no longer
+estimated: the previous estimate came from the same kind of inference that failed twice.
+
+Four venues answer automation with a bot check or a 403. **No attempt was made to get around
+any of them.** What was verified was verified by reading it in an ordinary browser.
 
 ## Repository layout
 
