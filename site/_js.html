@@ -1,0 +1,202 @@
+<script>
+(function(){
+"use strict";
+const D = window.__DATA__;
+const $ = (s,r)=> (r||document).querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ── barras: una marca por fila, etiqueta directa, sin leyenda de color sola ── */
+function barras(nodo, filas, max){
+  nodo.innerHTML = filas.map(f => `
+    <div class="barra ${f.clase}">
+      <span class="etq">${esc(f.etq)}</span>
+      <span class="pista"><i style="width:${(f.v/max*100).toFixed(1)}%"></i></span>
+      <span class="val">${esc(f.txt)}</span>
+    </div>`).join("");
+}
+
+const C = D.carriles;
+barras($("#barras-carriles"), [
+  {etq:"A · reranked", v:C.a8_rerank.recall, txt:"60/70", clase:"a"},
+  {etq:"A · dense+lexical", v:C.a8.recall, txt:"53/70", clase:"a"},
+  {etq:"A · dense only", v:C.a8_denso.recall, txt:"42/70", clase:"gris"},
+  {etq:"B · Knowledge Base", v:C.b8.recall, txt:"43/70", clase:"b"},
+  {etq:"B · engine only", v:C.b_s3v.recall, txt:"42/70", clase:"b"},
+], 70);
+
+barras($("#barras-literal"), [
+  {etq:"normalised", v:C.b8.recall, txt:"43/70", clase:"b"},
+  {etq:"literal", v:C.b8_literal.recall, txt:"5/70", clase:"gris"},
+], 70);
+
+/* ── corpus ─────────────────────────────────────────────────────────── */
+// What is known about access, at the confidence it was known. This column used to read
+// "no access" — a claim about the content, when the underlying data only spoke about the
+// PDF. See the audit note under the table.
+const ACCESO = {
+  "ingerido":          ["in the corpus",   "v-ok"],
+  "abierto-no-tomado": ["open, not taken", "v-mal"],
+  "parcial":           ["partial",         "v-neutro"],
+  "cerrado":           ["closed",          "v-neutro"],
+  "excluido":          ["excluded",        "v-mal"],
+};
+const EJE_EN = {
+  "1 · La búsqueda inicial de antecedentes": "1 · Prior work",
+  "2 · Cómo se hace el filtrado con modelos de lenguaje": "2 · LLM-based screening",
+  "3 · Valuación de puestos y la metodología Mercer": "3 · Job evaluation methodology",
+  "4 · RAGAS, las métricas y el juez automático": "4 · RAG metrics and LLM judges",
+  "5 · Sesgo y equidad": "5 · Bias and fairness",
+  "6 · Que el criterio estructurado gana al juicio libre": "6 · Structured criteria beat free judgement",
+  "7 · Cumplimiento y gobernanza": "7 · Compliance and governance",
+  "8 · El currículum adversarial": "8 · The adversarial résumé",
+  "9 · Lo que medimos nosotros": "9 · What we measure ourselves",
+};
+const eje = e => EJE_EN[e] || e;
+const NOTA_EN = {
+  "texto completo verificado a mano": "full text verified by hand",
+  "OpenAlex reporta PDF abierto en": "OpenAlex reports an open PDF at",
+  "hay una sede abierta, sin PDF directo": "an open venue exists, no direct PDF",
+  "recurso web: contenido en la página, no en PDF": "web resource: content on the page, not a PDF",
+  "descargó, pero era un resumen de una página": "downloaded, but it was a one-page abstract",
+  "caracteres": "characters", "otra sede": "another venue",
+};
+const traducirNota = n => n ? Object.entries(NOTA_EN)
+  .reduce((t,[es,en]) => t.replace(es,en), n) : n;
+const tbodyC = $("#tabla-corpus tbody");
+let ejeSel = "*";
+$("#ejes-chips").innerHTML = D.corpus.ejes.map(e =>
+  `<button class="chip" data-eje="${esc(e)}" aria-pressed="false" title="${esc(eje(e))}">${esc(e.split(" · ")[0])}</button>`).join("");
+function pintaCorpus(){
+  const fs = D.corpus.fuentes.filter(f => ejeSel === "*" || f.eje === ejeSel);
+  tbodyC.innerHTML = fs.map(f => {
+    const [txt, cls] = ACCESO[f.clase] || [f.clase,"v-neutro"];
+    return `<tr>
+      <td>${esc(f.titulo)}${f.web?' <span class="chico dim">· web resource</span>':""}
+        ${f.nota?`<span class="chico dim" style="display:block">${esc(traducirNota(f.nota))}</span>`:""}</td>
+      <td class="chico dim">${esc(eje(f.eje))}</td>
+      <td><span class="veredicto ${cls}">${esc(txt)}</span></td>
+      <td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer" class="mono chico">open ↗</a>` : '<span class="dim chico">—</span>'}</td>
+    </tr>`;
+  }).join("");
+}
+document.querySelectorAll("[data-eje]").forEach(b => b.addEventListener("click", () => {
+  ejeSel = b.dataset.eje;
+  document.querySelectorAll("[data-eje]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+  pintaCorpus();
+}));
+pintaCorpus();
+
+/* ── extractores ────────────────────────────────────────────────────── */
+$("#tabla-extractores tbody").innerHTML = D.extractores.map(e => `<tr>
+  <td class="mono">${esc(e.n)}</td>
+  <td><span class="veredicto ${e.v==="elegido"?"v-ok":"v-mal"}">${esc(e.v)}</span></td>
+  <td class="chico dim">${esc(e.nota)}</td></tr>`).join("");
+
+/* ── explorador de las 70 preguntas ─────────────────────────────────── */
+const tira = (pos, cls) => {
+  let h = `<span class="tira ${cls}" aria-hidden="true">`;
+  for (let i = 1; i <= 8; i++) h += `<i class="${pos === i ? "hit" : "nada"}"></i>`;
+  return h + "</span>";
+};
+const lista = $("#q-lista"), panel = $("#q-panel"), conteo = $("#q-conteo");
+let filtro = "*", texto = "", sel = null;
+
+function visibles(){
+  return D.gold.preguntas.filter(q => {
+    if (filtro === "soloA" && !(q.a8 && !q.b8)) return false;
+    if (filtro === "soloB" && !(q.b8 && !q.a8)) return false;
+    if (filtro === "ninguno" && (q.a8 || q.b8)) return false;
+    if (texto && !(q.pregunta + " " + q.span + " " + q.id).toLowerCase().includes(texto)) return false;
+    return true;
+  });
+}
+function pintaLista(){
+  const vs = visibles();
+  lista.innerHTML = vs.map(q => `
+    <button class="qfila" role="option" data-id="${q.id}" aria-selected="${sel===q.id}">
+      <span>
+        <span class="qid">${esc(q.id)} · ${esc(q.tipo)}</span>
+        <span class="qtx">${esc(q.pregunta)}</span>
+      </span>
+      <span style="display:flex;gap:.4rem;flex-direction:column">
+        ${tira(q.a8,"a")}${tira(q.b8,"b")}
+      </span>
+    </button>`).join("") || `<p class="chico dim" style="padding:1rem">No questions match that filter.</p>`;
+  const soloA = vs.filter(q=>q.a8&&!q.b8).length, soloB = vs.filter(q=>q.b8&&!q.a8).length;
+  conteo.textContent = `${vs.length} of 70 · only A: ${soloA} · only B: ${soloB}`;
+  lista.querySelectorAll(".qfila").forEach(b =>
+    b.addEventListener("click", () => { sel = b.dataset.id; pintaLista(); pintaPanel(); }));
+}
+function slotTxt(p){ return p ? `position ${p}` : "not found"; }
+function pintaPanel(){
+  const q = D.gold.preguntas.find(x => x.id === sel);
+  if (!q) return;
+  panel.innerHTML = `
+    <p class="mono chico dim">${esc(q.id)} · ${esc(q.tipo)}</p>
+    <h3 style="margin:.4rem 0 .9rem">${esc(q.pregunta)}</h3>
+    <p class="chico dim" style="margin-bottom:.35rem">Declared literal evidence · document ${esc(q.doc)}</p>
+    <div class="pasaje"><mark>${esc(q.span)}</mark></div>
+    <p class="chico dim" style="margin:.9rem 0 .5rem">${esc((D.gold.titulos[q.doc]||"").slice(0,110))}…</p>
+    <table style="margin-top:.6rem">
+      <tr><td><b style="color:var(--ink)">Lane A</b> <span class="chico dim">hand-built</span></td>
+          <td class="num">${slotTxt(q.a8)}</td></tr>
+      <tr><td><b style="color:var(--ink)">Lane B</b> <span class="chico dim">managed</span></td>
+          <td class="num">${slotTxt(q.b8)}</td></tr>
+      <tr><td class="chico dim">B, compared literally</td>
+          <td class="num chico dim">${q.b8_literal ? "position "+q.b8_literal : "fails on whitespace"}</td></tr>
+      <tr><td class="chico dim">with 16 slots · A / B</td>
+          <td class="num chico dim">${q.a16||"—"} / ${q.b16||"—"}</td></tr>
+    </table>`;
+}
+$("#q-buscar").addEventListener("input", e => { texto = e.target.value.toLowerCase(); pintaLista(); });
+document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
+  filtro = b.dataset.f;
+  document.querySelectorAll("[data-f]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+  pintaLista();
+}));
+pintaLista();
+sel = "q-00-01"; pintaLista(); pintaPanel();
+
+/* ── comparación de extractores, con el salto de línea visible ──────── */
+const spanA = D.gold.preguntas[0].span;
+$("#cmp-a").innerHTML = esc("…large corporations ") +
+  '<span class="salto">\\n</span>' + esc("may prioritize formal credentials…");
+$("#cmp-b").innerHTML = esc("…large corporations may prioritize formal credentials…");
+
+/* ── simulador de reparto de slots ──────────────────────────────────── */
+function evaluar(nA){
+  const nB = 8 - nA, slots = [];
+  let ia = 1, ib = 1;
+  while (slots.length < 8){
+    if (ia <= nA) slots.push(["a", ia++]);
+    if (slots.length < 8 && ib <= nB) slots.push(["b", ib++]);
+    if (ia > nA && ib > nB) break;
+  }
+  let ac = 0;
+  for (const q of D.gold.preguntas){
+    const pos = {a:q.a8, b:q.b8};
+    if (slots.some(([f,i]) => pos[f] === i)) ac++;
+  }
+  return ac;
+}
+const base = evaluar(8);
+function pintaSim(nA){
+  const ac = evaluar(nA), d = ac - base;
+  $("#sim-out").innerHTML = `
+    <div class="barra ${nA===8?"a":nA===0?"b":"gris"}">
+      <span class="etq mono">${nA}A + ${8-nA}B</span>
+      <span class="pista"><i style="width:${(ac/70*100).toFixed(1)}%"></i></span>
+      <span class="val">${ac}/70</span>
+    </div>
+    <p style="margin-top:.9rem;font-size:1.05rem">
+      <b class="mono" style="color:${d<0?"var(--mal)":d>0?"var(--ok)":"var(--ink)"}">
+        ${d>0?"+":""}${d}</b>
+      <span class="dim"> versus giving all 8 slots to the hand-built lane.</span>
+    </p>
+    <p class="chico dim" style="margin-top:.4rem">The union ceiling is 58. No split
+      reaches it, and none beats ${base}.</p>`;
+}
+$("#sl").addEventListener("input", e => pintaSim(+e.target.value));
+pintaSim(8);
+})();
+</script>

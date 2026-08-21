@@ -1,0 +1,95 @@
+<section>
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">The ceiling trap</p>
+      <h2>The union of both lanes is 58 of 70. It buys nothing.</h2>
+      <p class="dim">Each lane rescues questions the other misses, so combining them looks
+        like money on the pavement. But "one of the two brought it" is what a selector that
+        knew in advance which lane is right would achieve — and no such selector exists. A
+        real system has to fit both lists into the same eight slots.</p>
+      <p>Move the split and recall recomputes from each question's real positions. It isn't
+        a simulation: it's the measured data.</p>
+    </div>
+
+    <div class="losa">
+      <label for="sl" class="chico dim">How the 8 slots are split</label>
+      <input type="range" id="sl" min="0" max="8" value="8" step="1"
+             aria-label="How many of the 8 slots go to lane A">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem" class="mono dim">
+        <span>all to managed</span><span>all to hand-built</span>
+      </div>
+      <div id="sim-out" style="margin-top:1.4rem"></div>
+    </div>
+
+    <div class="spine pila" style="margin-inline:0">
+      <p><strong>Why it fails, in arithmetic:</strong> three of the five questions the
+        managed lane rescues sit at positions 5 and 6 of its list, where no eight-slot split
+        reaches them. And the hand-built lane has <b class="mono">10</b> hits living in
+        slots 5 through 8 — exactly the ones sacrificed to make room.
+        <strong>Giving up four slots kills ten to gain two.</strong></p>
+      <details>
+        <summary>Forensic detail · and 16 slots doesn't fix it either</summary>
+        <p class="chico dim">If the problem were a lack of room, widening it would unblock
+          it. It doesn't: at 16 slots the hand-built lane alone reaches <b>57 of 70</b> and
+          the even split lands at <b>55</b>. Two different budgets, the same sign. The rule
+          that falls out: under a fixed result budget, going deeper in your own lane always
+          beats splitting it with the managed one.</p>
+        <p class="chico dim" style="margin-top:.7rem"><strong>Stated limitation:</strong>
+          the simulator doesn't deduplicate across lanes, so if both return the same passage
+          they burn two slots. Fixing that would favour the hybrid — but it would need to
+          recover between 2 and 5 questions to break even, and duplicates free up few slots.
+          Not enough to flip the sign.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--surface)">
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">The finding</p>
+      <h2>What you lose isn't recall. It's the pointer.</h2>
+      <p class="dim">Of the 560 passages the managed lane returned across the whole
+        measurement, <strong>560 carry a page number and none carries the exact position in
+        the document</strong>. The citation stops being a verifiable pointer and becomes an
+        approximate match somewhere on page N.</p>
+    </div>
+
+    <div class="dos">
+      <div class="losa pila">
+        <h3>And there's a second loss, a worse one</h3>
+        <p>The returned text is no longer our text. The service extracts the PDF with its
+          own extractor, and the same passage comes out differently from each. This is the
+          real case from the first question in the set:</p>
+        <div>
+          <p class="chico mono dim" style="margin-bottom:.35rem">our extractor</p>
+          <div class="pasaje" id="cmp-a"></div>
+        </div>
+        <div>
+          <p class="chico mono dim" style="margin-bottom:.35rem">the managed service's</p>
+          <div class="pasaje" id="cmp-b"></div>
+        </div>
+        <p>One line break. That's enough for literal verification to fail.</p>
+      </div>
+      <div class="pila">
+        <div class="losa">
+          <h3 style="margin-bottom:.8rem">The same lane, measured two ways</h3>
+          <div id="barras-literal"></div>
+          <p class="chico dim" style="margin-top:.9rem">Compared <b>literally</b> against
+            our document, the managed lane appears to collapse to 5 of 70. The 38-question
+            gap isn't missing evidence: it's line breaks. Literal measurement here isn't
+            measuring retrieval — it's measuring the disagreement between two extractors.</p>
+        </div>
+        <div class="losa">
+          <h3 style="margin-bottom:.6rem">The architectural consequence</h3>
+          <p class="chico">With a managed service, this project's deterministic citation
+            check <strong>cannot run as written</strong>: it forces you to normalise
+            whitespace. And normalising is precisely what — measured separately — welds
+            non-contiguous text together and lets something absent pass as present.</p>
+          <p class="chico" style="margin-top:.7rem">The managed lane doesn't degrade the
+            citation. <strong>It removes the floor the method stands on.</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

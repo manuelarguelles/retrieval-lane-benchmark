@@ -1,0 +1,117 @@
+<section>
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">Method</p>
+      <h2>Five times the instrument failed, not the system</h2>
+      <p class="dim">The part of this experiment that changed its mind most wasn't the
+        result — it was the way of measuring it. Each of these started as a firm conclusion
+        and ended refuted by its own measurement.</p>
+    </div>
+    <div class="tarjetas">
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>The best PDF extractor</h3>
+        <p class="chico dim">Five rounds, seven candidates, twelve documents. The final
+          conclusion is the <em>opposite</em> of round one's: the initial winner, with a
+          spotless 33 out of 33, dropped to fourth place once an independent referee judged
+          it instead of itself.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"The managed lane retrieves less"</h3>
+        <p class="chico dim">First number: 5 of 70. I opened one concrete case and compared
+          both texts character by character: identical apart from a line break. It was
+          measuring extractor disagreement, not retrieval.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"More judges is better"</h3>
+        <p class="chico dim">Of three automated judges, two survive. The third rejected
+          <b>44 %</b> of correct answers. A judge that doesn't earn its keep is worse than
+          no judge.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"Translation is the lever"</h3>
+        <p class="chico dim">It has 15 genuine defects out of 70 and recall is identical
+          against a reference translation. Badly translated questions fail <em>less</em>
+          (13 %) than flawless ones (27 %).</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"The hybrid adds up"</h3>
+        <p class="chico dim">The union was 58 of 70. The real hybrid captures 0 of those 5.
+          An oracle ceiling is not a system.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-neutro">recurring pattern</span>
+        <h3>The default that reads as a result</h3>
+        <p class="chico dim">A mutation that never applies leaves detection measured over
+          zero cases, and <span class="mono">0/0</span> reads as 100 %. It showed up six
+          times in this project — including once where a missing dependency was reported as
+          "the service is down".</p>
+      </div>
+    </div>
+    <details class="spine" style="margin-inline:0">
+      <summary>Forensic detail · the extractors evaluated and why each fell</summary>
+      <div class="scroll"><table id="tabla-extractores">
+        <thead><tr><th>Extractor</th><th>Verdict</th><th>Measured reason</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="chico dim" style="margin-top:.8rem">De-hyphenation belongs in the normalised
+        view, never in the raw text: it lifts recovery from 57 % to 86 %, but applied to the
+        raw text it corrupts the rest by joining legitimate hyphens. That validates, by
+        measurement, the design of two representations with an index map between them.</p>
+    </details>
+  </div>
+</section>
+
+<section style="background:var(--surface)">
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">Spec sheet</p>
+      <h2>What got built, and what stays open</h2>
+    </div>
+    <div class="tarjetas">
+      <div class="tarjeta"><h3>Guardrails</h3><p class="chico dim">PDF-borne prompt
+        injection and pseudonymisation at ingestion. External detection 8 of 8, with 1 false
+        rejection in 1,263. Document-borne injection is real: a PDF off the internet can
+        carry instructions a naive reader obeys.</p></div>
+      <div class="tarjeta"><h3>Automated judges</h3><p class="chico dim">Three built, two
+        switched on. Support and attribution earn their keep; completeness doesn't. The
+        attribution judge rests on 6 cases, and that gets declared rather than rounded
+        away.</p></div>
+      <div class="tarjeta"><h3>Observability</h3><p class="chico dim">Per-query trace with
+        sub-questions, scored chunks, cited chunks and rejections.
+        <b class="mono">US$ 0.000113</b> and about 3 s per query.</p></div>
+      <div class="tarjeta"><h3>Verification</h3><p class="chico dim">211 automated tests.
+        An adversarial validation pass found <b>14 defects with all of them green</b>, two of
+        which broke the system's central promise.</p></div>
+    </div>
+
+    <div class="losa">
+      <h3 style="margin-bottom:.9rem">What this experiment does not prove</h3>
+      <ul class="pila chico dim" style="padding-left:1.1rem;gap:.6rem">
+        <li>The generating model isn't the one I'd have chosen: the provider had the main
+          model family quota-blocked throughout. The judges run on the same model that
+          generates, and that's the largest bias still standing.</li>
+        <li>Thirteen documents and seventy questions can separate lanes that differ by ten
+          points, not claim differences of two.</li>
+        <li>Results hold for English-language academic papers queried in Spanish. A corpus
+          of internal documents, with tables and forms, is a different problem.</li>
+        <li>The managed service's chunking was used at its default settings. Tuning it would
+          likely move its recall; it would not move the loss of the pointer, which is
+          structural.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="ancho pila">
+    <p><strong>Manuel Argüelles</strong> · engineering lab notebook, August 2026</p>
+    <p class="chico">Every figure on this page comes from reproducible measurement harnesses
+      in the project repository. The corpus is open-access academic work, linked to its
+      original source. Account and client details from the infrastructure this ran on are
+      deliberately outside this publication.</p>
+  </div>
+</footer>

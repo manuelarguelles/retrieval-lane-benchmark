@@ -1,0 +1,94 @@
+<style>
+/* ── hero ─────────────────────────────────────────────────────────── */
+.hero{padding-block:clamp(3.5rem,2rem + 7vw,7rem) clamp(2.5rem,2rem + 3vw,4rem);
+  border-bottom:1px solid var(--line)}
+.hero .kicker{font-family:"IBM Plex Mono",monospace;font-size:.78rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--acento);margin-bottom:1.4rem}
+.hero .bajada{font-size:clamp(1.1rem,1rem + .6vw,1.35rem);color:var(--ink-2);
+  max-width:60ch;margin-top:1.4rem}
+.tesis{font-family:Newsreader,Georgia,serif;font-style:italic;
+  font-size:clamp(1.3rem,1.1rem + 1vw,1.75rem);line-height:1.4;color:var(--ink);
+  border-left:3px solid var(--acento);padding-left:1.1rem;margin-top:2.2rem;max-width:52ch}
+/* ── cifras ───────────────────────────────────────────────────────── */
+.cifras{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-top:3rem}
+.cifra{background:var(--surface);padding:1.1rem 1.2rem;display:flex;
+  flex-direction:column;gap:.3rem}
+.cifra b{font-family:Newsreader,Georgia,serif;font-size:clamp(1.9rem,1.4rem + 1.8vw,2.6rem);
+  font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.cifra span{font-size:.78rem;color:var(--ink-3);line-height:1.4}
+/* ── losa de evidencia ────────────────────────────────────────────── */
+.losa{background:var(--surface);border:1px solid var(--line);padding:clamp(1.1rem,1vw + .8rem,1.8rem)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:500;white-space:nowrap}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+tr.destaca td{background:var(--acento-suave)}
+/* ── barras (marca fina, extremo redondeado, anclada a la base) ───── */
+.barra{display:grid;grid-template-columns:minmax(88px,auto) 1fr auto;gap:.8rem;
+  align-items:center;padding:.3rem 0}
+.barra .etq{font-size:.82rem;color:var(--ink-2)}
+.pista{height:14px;background:var(--surface-2);position:relative;overflow:hidden}
+.pista i{position:absolute;inset-block:0;left:0;display:block;
+  border-radius:0 4px 4px 0;transition:width .35s cubic-bezier(.4,0,.2,1)}
+.barra .val{font-family:"IBM Plex Mono",monospace;font-size:.82rem;
+  font-variant-numeric:tabular-nums;color:var(--ink-2);min-width:5.5ch;text-align:right}
+.a i{background:var(--marca-a)} .b i{background:var(--marca-b)}
+.gris i{background:var(--ink-3)}
+/* leyenda: identidad nunca sólo por color */
+.leyenda{display:flex;flex-wrap:wrap;gap:1.1rem;font-size:.8rem;color:var(--ink-2)}
+.leyenda b{display:inline-flex;align-items:center;gap:.4rem;font-weight:500}
+.pip{width:11px;height:11px;border-radius:2px;display:inline-block;flex:none}
+/* ── explorador de preguntas ──────────────────────────────────────── */
+.filtros{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:1rem}
+.filtros input[type=search]{flex:1 1 220px;min-width:0;padding:.5rem .7rem;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:.88rem;border-radius:0}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:.74rem;padding:.36rem .68rem;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink-2);
+  cursor:pointer;letter-spacing:.04em}
+.chip[aria-pressed=true]{background:var(--acento);border-color:var(--acento);color:var(--surface)}
+:root[data-theme="dark"] .chip[aria-pressed=true],
+:root:not([data-theme="light"]) .chip[aria-pressed=true]{color:#101312}
+.qlista{max-height:520px;overflow-y:auto;border:1px solid var(--line);background:var(--surface)}
+.qfila{display:grid;grid-template-columns:1fr auto;gap:.8rem;align-items:center;
+  width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);
+  padding:.65rem .8rem;cursor:pointer;color:inherit;font:inherit}
+.qfila:hover{background:var(--surface-2)}
+.qfila[aria-selected=true]{background:var(--acento-suave)}
+.qfila .qid{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-3)}
+.qfila .qtx{font-size:.86rem;line-height:1.4;display:block;margin-top:.15rem}
+/* tira de slots: cada casilla es un slot del top-8 */
+.tira{display:flex;gap:2px;flex:none}
+.tira i{width:9px;height:16px;background:var(--surface-2);display:block;border-radius:1px}
+.tira i.hit{background:var(--marca-a)}
+.tira.b i.hit{background:var(--marca-b)}
+.tira i.nada{opacity:.55}
+.panel{background:var(--surface);border:1px solid var(--line);padding:1.2rem;
+  position:sticky;top:1rem}
+mark{background:var(--resalta);color:var(--resalta-ink);padding:.08em .12em}
+.pasaje{font-family:"IBM Plex Mono",monospace;font-size:.82rem;line-height:1.65;
+  background:var(--surface-2);padding:.9rem;white-space:pre-wrap;word-break:break-word;
+  max-height:200px;overflow-y:auto}
+.salto{color:var(--mal);font-weight:600;background:color-mix(in srgb,var(--mal) 14%,transparent);
+  padding:0 .15em;border-radius:2px}
+details{border-top:1px solid var(--line);padding-top:.9rem;margin-top:.9rem}
+summary{cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:.76rem;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--acento)}
+summary::marker{color:var(--ink-3)}
+details[open] summary{margin-bottom:.8rem}
+.dos{display:grid;gap:1.4rem;grid-template-columns:1fr}
+@media(min-width:900px){.dos{grid-template-columns:1.15fr .85fr}}
+.tarjetas{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.tarjeta{background:var(--surface);padding:1.1rem}
+.tarjeta h3{margin-bottom:.5rem}
+.veredicto{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:.2rem .5rem;border:1px solid currentColor;display:inline-block}
+.v-ok{color:var(--ok)} .v-mal{color:var(--mal)} .v-neutro{color:var(--ink-3)}
+input[type=range]{width:100%;accent-color:var(--acento)}
+footer{border-top:1px solid var(--line);padding-block:2.5rem;color:var(--ink-3);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>

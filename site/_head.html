@@ -1,0 +1,59 @@
+<title>Hand-Built Versus Managed Retrieval</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F0F1EE; --surface:#FBFBFA; --surface-2:#E8EAE6; --line:#D3D7D0;
+  --ink:#16191C; --ink-2:#41474E; --ink-3:#69707A;
+  --acento:#0B5F58; --acento-suave:#DCECE9;
+  --marca-a:#0E9E8E; --marca-b:#C06A16;
+  --resalta:#FFD84D; --resalta-ink:#16191C;
+  --ok:#2F6F4E; --mal:#A33A2A;
+  --sp:clamp(1rem,.6rem + 1.4vw,1.6rem);
+  --spine:min(68ch,100% - 2*var(--sp));
+  --ancho:min(1120px,100% - 2*var(--sp));
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#131614; --surface:#1A1E1C; --surface-2:#232826; --line:#333A37;
+  --ink:#E9EBE7; --ink-2:#B6BDB8; --ink-3:#8B938D;
+  --acento:#6FD3C4; --acento-suave:#1D302E;
+  --marca-a:#1FA391; --marca-b:#CE7C24;
+  --resalta:#F0C33C; --resalta-ink:#16191C;
+  --ok:#6FBF8F; --mal:#E08472;
+}}
+:root[data-theme="dark"]{
+  --ground:#131614; --surface:#1A1E1C; --surface-2:#232826; --line:#333A37;
+  --ink:#E9EBE7; --ink-2:#B6BDB8; --ink-3:#8B938D;
+  --acento:#6FD3C4; --acento-suave:#1D302E;
+  --marca-a:#1FA391; --marca-b:#CE7C24;
+  --resalta:#F0C33C; --resalta-ink:#16191C;
+  --ok:#6FBF8F; --mal:#E08472;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:clamp(1rem,.97rem + .15vw,1.075rem);line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Newsreader,Georgia,"Times New Roman",serif;font-weight:600;
+  line-height:1.14;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,1.5rem + 4vw,4.2rem);letter-spacing:-.015em}
+h2{font-size:clamp(1.65rem,1.2rem + 1.8vw,2.4rem);letter-spacing:-.01em}
+h3{font-size:clamp(1.15rem,1rem + .6vw,1.4rem)}
+p{margin:0}
+a{color:var(--acento);text-underline-offset:.18em}
+:focus-visible{outline:2.5px solid var(--acento);outline-offset:2px;border-radius:2px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+.spine{width:var(--spine);margin-inline:auto}
+.ancho{width:var(--ancho);margin-inline:auto}
+section{padding-block:clamp(3rem,2rem + 4vw,5.5rem)}
+.pila{display:flex;flex-direction:column;gap:1.1rem}
+.pila-lg{display:flex;flex-direction:column;gap:2rem}
+/* eyebrow con el ID REAL de la decisión que documenta la sección */
+.rotulo{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:.6rem}
+.rotulo::after{content:"";flex:1;height:1px;background:var(--line)}
+.dim{color:var(--ink-2)}
+.chico{font-size:.875rem;line-height:1.55}
+</style>

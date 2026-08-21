@@ -1,0 +1,107 @@
+<header class="hero">
+  <div class="spine">
+    <p class="kicker">Lab notebook · August 2026</p>
+    <h1>Hand-built versus managed retrieval</h1>
+    <p class="bajada">I built the same research agent twice over a corpus of academic
+      papers: once by hand, owning the chunking and the character offsets, and once
+      delegated to a managed retrieval service. Same corpus, same 70 questions, same
+      generating model. The question was never which one retrieves more — it was
+      <strong>what you give up by delegating</strong>.</p>
+    <p class="tesis">The model points, the code extracts and verifies. A citation
+      doesn't rest on the model being honest: it rests on the chunk keeping its
+      position, and on a literal check confirming it.</p>
+
+    <div class="cifras">
+      <div class="cifra"><b>76<span style="font-size:.5em"> %</span></b>
+        <span>recall@8, hand-built lane · 53 of 70</span></div>
+      <div class="cifra"><b>61<span style="font-size:.5em"> %</span></b>
+        <span>recall@8, managed lane · 43 of 70</span></div>
+      <div class="cifra"><b>0</b>
+        <span>of 560 returned passages carry a character offset</span></div>
+      <div class="cifra"><b>0<span style="font-size:.5em"> of 5</span></b>
+        <span>gains captured by the hybrid that looked obvious</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="spine pila">
+    <p class="rotulo">The setup</p>
+    <h2>Two lanes, one yardstick</h2>
+    <p>An agent that answers with citations makes an uncomfortable promise: that the
+      quoted text actually exists in the source. The cheap way to keep it is to ask the
+      model to copy the passage. The way that holds is to have the model <em>point</em>,
+      and let code pull the text by its position and verify it.</p>
+    <p>That difference was already measured before this experiment: on the same corpus
+      and the same model, copying scores <b class="mono">141/162</b> and pointing scores
+      <b class="mono">180/180</b>. Delegating the chunking to a managed service puts that
+      architecture in doubt, because the chunk stops being ours.</p>
+    <div class="tarjetas">
+      <div class="tarjeta">
+        <h3>Lane A — hand-built</h3>
+        <p class="chico dim">Own chunker with character offsets, a dense index
+          (multilingual embeddings) plus a lexical BM25 index, fused with reciprocal rank
+          fusion. Every result knows where it starts and ends in the source document.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Lane B — managed</h3>
+        <p class="chico dim">A Knowledge Base service that extracts the PDF, chunks,
+          embeds, indexes and answers. It is never told how to chunk. It returns passages
+          of text, not pointers.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>The shared yardstick</h3>
+        <p class="chico dim">13 documents, 70 questions labelled with their literal
+          supporting evidence, a budget of 8 results. A hit means the expected evidence
+          shows up within those 8.</p>
+      </div>
+    </div>
+    <div class="losa">
+      <h3 style="margin-bottom:.6rem">A detail that shapes every number here</h3>
+      <p class="chico">The corpus is in <strong>English</strong> and the questions are
+        written in <strong>Spanish</strong> — this was built for Spanish-speaking readers
+        querying English-language research. Queries are machine-translated into the
+        corpus language before retrieval, which is why a multilingual embedding model is
+        required rather than optional. Measured: without that translation step, the
+        lexical index retrieves 2 of 70 and drags the fused ranking below the dense index
+        on its own.</p>
+    </div>
+    <details>
+      <summary>Forensic detail · why the comparison is not symmetric</summary>
+      <p class="chico dim">In lane A a hit means "the chunk <em>we</em> built contains the
+        evidence", checkable by position. In lane B it means "the passage <em>the
+        service</em> returned contains it", checkable only by searching inside the
+        returned text. The units differ, and publishing both numbers as though they
+        measured the same thing would be exactly the rigged comparison this project
+        exists to avoid. It gets declared and measured anyway, because it is the honest
+        comparison available.</p>
+    </details>
+  </div>
+</section>
+
+<section style="background:var(--surface)">
+  <div class="ancho pila-lg">
+    <div class="pila">
+      <p class="rotulo">The corpus · 37 sources, 13 with full text</p>
+      <h2>What the material is made of</h2>
+      <p class="dim" style="max-width:68ch">The real bibliography of a thesis on
+        LLM-assisted personnel selection, organised into nine thematic axes by its author.
+        The axes aren't decoration: they are the partition the question set is built on.
+        Of the 37 sources, 21 had an open-access PDF and 13 survived download and
+        verification.</p>
+    </div>
+    <div class="filtros" role="group" aria-label="Filter sources">
+      <button class="chip" data-eje="*" aria-pressed="true">all axes</button>
+      <span id="ejes-chips"></span>
+    </div>
+    <div class="scroll losa"><table id="tabla-corpus">
+      <caption class="chico dim" style="text-align:left;padding-bottom:.6rem">
+        <b>in the corpus</b> = PDF downloaded, verified and chunked. <b>open, not taken</b>
+        = an open version exists that ingestion never picked up. <b>partial</b> = the content
+        lives on the page rather than in a PDF. <b>closed</b> = no open version known.
+        <b>excluded</b> = downloaded, but turned out to be a one-page abstract.</caption>
+      <thead><tr><th>Source</th><th>Axis</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>

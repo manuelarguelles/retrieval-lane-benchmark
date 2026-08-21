@@ -1,0 +1,781 @@
+<title>Hand-Built Versus Managed Retrieval</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F0F1EE; --surface:#FBFBFA; --surface-2:#E8EAE6; --line:#D3D7D0;
+  --ink:#16191C; --ink-2:#41474E; --ink-3:#69707A;
+  --acento:#0B5F58; --acento-suave:#DCECE9;
+  --marca-a:#0E9E8E; --marca-b:#C06A16;
+  --resalta:#FFD84D; --resalta-ink:#16191C;
+  --ok:#2F6F4E; --mal:#A33A2A;
+  --sp:clamp(1rem,.6rem + 1.4vw,1.6rem);
+  --spine:min(68ch,100% - 2*var(--sp));
+  --ancho:min(1120px,100% - 2*var(--sp));
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#131614; --surface:#1A1E1C; --surface-2:#232826; --line:#333A37;
+  --ink:#E9EBE7; --ink-2:#B6BDB8; --ink-3:#8B938D;
+  --acento:#6FD3C4; --acento-suave:#1D302E;
+  --marca-a:#1FA391; --marca-b:#CE7C24;
+  --resalta:#F0C33C; --resalta-ink:#16191C;
+  --ok:#6FBF8F; --mal:#E08472;
+}}
+:root[data-theme="dark"]{
+  --ground:#131614; --surface:#1A1E1C; --surface-2:#232826; --line:#333A37;
+  --ink:#E9EBE7; --ink-2:#B6BDB8; --ink-3:#8B938D;
+  --acento:#6FD3C4; --acento-suave:#1D302E;
+  --marca-a:#1FA391; --marca-b:#CE7C24;
+  --resalta:#F0C33C; --resalta-ink:#16191C;
+  --ok:#6FBF8F; --mal:#E08472;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:clamp(1rem,.97rem + .15vw,1.075rem);line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Newsreader,Georgia,"Times New Roman",serif;font-weight:600;
+  line-height:1.14;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,1.5rem + 4vw,4.2rem);letter-spacing:-.015em}
+h2{font-size:clamp(1.65rem,1.2rem + 1.8vw,2.4rem);letter-spacing:-.01em}
+h3{font-size:clamp(1.15rem,1rem + .6vw,1.4rem)}
+p{margin:0}
+a{color:var(--acento);text-underline-offset:.18em}
+:focus-visible{outline:2.5px solid var(--acento);outline-offset:2px;border-radius:2px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+.spine{width:var(--spine);margin-inline:auto}
+.ancho{width:var(--ancho);margin-inline:auto}
+section{padding-block:clamp(3rem,2rem + 4vw,5.5rem)}
+.pila{display:flex;flex-direction:column;gap:1.1rem}
+.pila-lg{display:flex;flex-direction:column;gap:2rem}
+/* eyebrow con el ID REAL de la decisión que documenta la sección */
+.rotulo{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:.6rem}
+.rotulo::after{content:"";flex:1;height:1px;background:var(--line)}
+.dim{color:var(--ink-2)}
+.chico{font-size:.875rem;line-height:1.55}
+</style>
+
+<style>
+/* ── hero ─────────────────────────────────────────────────────────── */
+.hero{padding-block:clamp(3.5rem,2rem + 7vw,7rem) clamp(2.5rem,2rem + 3vw,4rem);
+  border-bottom:1px solid var(--line)}
+.hero .kicker{font-family:"IBM Plex Mono",monospace;font-size:.78rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--acento);margin-bottom:1.4rem}
+.hero .bajada{font-size:clamp(1.1rem,1rem + .6vw,1.35rem);color:var(--ink-2);
+  max-width:60ch;margin-top:1.4rem}
+.tesis{font-family:Newsreader,Georgia,serif;font-style:italic;
+  font-size:clamp(1.3rem,1.1rem + 1vw,1.75rem);line-height:1.4;color:var(--ink);
+  border-left:3px solid var(--acento);padding-left:1.1rem;margin-top:2.2rem;max-width:52ch}
+/* ── cifras ───────────────────────────────────────────────────────── */
+.cifras{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-top:3rem}
+.cifra{background:var(--surface);padding:1.1rem 1.2rem;display:flex;
+  flex-direction:column;gap:.3rem}
+.cifra b{font-family:Newsreader,Georgia,serif;font-size:clamp(1.9rem,1.4rem + 1.8vw,2.6rem);
+  font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.cifra span{font-size:.78rem;color:var(--ink-3);line-height:1.4}
+/* ── losa de evidencia ────────────────────────────────────────────── */
+.losa{background:var(--surface);border:1px solid var(--line);padding:clamp(1.1rem,1vw + .8rem,1.8rem)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:500;white-space:nowrap}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+tr.destaca td{background:var(--acento-suave)}
+/* ── barras (marca fina, extremo redondeado, anclada a la base) ───── */
+.barra{display:grid;grid-template-columns:minmax(88px,auto) 1fr auto;gap:.8rem;
+  align-items:center;padding:.3rem 0}
+.barra .etq{font-size:.82rem;color:var(--ink-2)}
+.pista{height:14px;background:var(--surface-2);position:relative;overflow:hidden}
+.pista i{position:absolute;inset-block:0;left:0;display:block;
+  border-radius:0 4px 4px 0;transition:width .35s cubic-bezier(.4,0,.2,1)}
+.barra .val{font-family:"IBM Plex Mono",monospace;font-size:.82rem;
+  font-variant-numeric:tabular-nums;color:var(--ink-2);min-width:5.5ch;text-align:right}
+.a i{background:var(--marca-a)} .b i{background:var(--marca-b)}
+.gris i{background:var(--ink-3)}
+/* leyenda: identidad nunca sólo por color */
+.leyenda{display:flex;flex-wrap:wrap;gap:1.1rem;font-size:.8rem;color:var(--ink-2)}
+.leyenda b{display:inline-flex;align-items:center;gap:.4rem;font-weight:500}
+.pip{width:11px;height:11px;border-radius:2px;display:inline-block;flex:none}
+/* ── explorador de preguntas ──────────────────────────────────────── */
+.filtros{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:1rem}
+.filtros input[type=search]{flex:1 1 220px;min-width:0;padding:.5rem .7rem;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:.88rem;border-radius:0}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:.74rem;padding:.36rem .68rem;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink-2);
+  cursor:pointer;letter-spacing:.04em}
+.chip[aria-pressed=true]{background:var(--acento);border-color:var(--acento);color:var(--surface)}
+:root[data-theme="dark"] .chip[aria-pressed=true],
+:root:not([data-theme="light"]) .chip[aria-pressed=true]{color:#101312}
+.qlista{max-height:520px;overflow-y:auto;border:1px solid var(--line);background:var(--surface)}
+.qfila{display:grid;grid-template-columns:1fr auto;gap:.8rem;align-items:center;
+  width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);
+  padding:.65rem .8rem;cursor:pointer;color:inherit;font:inherit}
+.qfila:hover{background:var(--surface-2)}
+.qfila[aria-selected=true]{background:var(--acento-suave)}
+.qfila .qid{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-3)}
+.qfila .qtx{font-size:.86rem;line-height:1.4;display:block;margin-top:.15rem}
+/* tira de slots: cada casilla es un slot del top-8 */
+.tira{display:flex;gap:2px;flex:none}
+.tira i{width:9px;height:16px;background:var(--surface-2);display:block;border-radius:1px}
+.tira i.hit{background:var(--marca-a)}
+.tira.b i.hit{background:var(--marca-b)}
+.tira i.nada{opacity:.55}
+.panel{background:var(--surface);border:1px solid var(--line);padding:1.2rem;
+  position:sticky;top:1rem}
+mark{background:var(--resalta);color:var(--resalta-ink);padding:.08em .12em}
+.pasaje{font-family:"IBM Plex Mono",monospace;font-size:.82rem;line-height:1.65;
+  background:var(--surface-2);padding:.9rem;white-space:pre-wrap;word-break:break-word;
+  max-height:200px;overflow-y:auto}
+.salto{color:var(--mal);font-weight:600;background:color-mix(in srgb,var(--mal) 14%,transparent);
+  padding:0 .15em;border-radius:2px}
+details{border-top:1px solid var(--line);padding-top:.9rem;margin-top:.9rem}
+summary{cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:.76rem;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--acento)}
+summary::marker{color:var(--ink-3)}
+details[open] summary{margin-bottom:.8rem}
+.dos{display:grid;gap:1.4rem;grid-template-columns:1fr}
+@media(min-width:900px){.dos{grid-template-columns:1.15fr .85fr}}
+.tarjetas{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.tarjeta{background:var(--surface);padding:1.1rem}
+.tarjeta h3{margin-bottom:.5rem}
+.veredicto{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:.2rem .5rem;border:1px solid currentColor;display:inline-block}
+.v-ok{color:var(--ok)} .v-mal{color:var(--mal)} .v-neutro{color:var(--ink-3)}
+input[type=range]{width:100%;accent-color:var(--acento)}
+footer{border-top:1px solid var(--line);padding-block:2.5rem;color:var(--ink-3);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="hero">
+  <div class="spine">
+    <p class="kicker">Lab notebook · August 2026</p>
+    <h1>Hand-built versus managed retrieval</h1>
+    <p class="bajada">I built the same research agent twice over a corpus of academic
+      papers: once by hand, owning the chunking and the character offsets, and once
+      delegated to a managed retrieval service. Same corpus, same 70 questions, same
+      generating model. The question was never which one retrieves more — it was
+      <strong>what you give up by delegating</strong>.</p>
+    <p class="tesis">The model points, the code extracts and verifies. A citation
+      doesn't rest on the model being honest: it rests on the chunk keeping its
+      position, and on a literal check confirming it.</p>
+
+    <div class="cifras">
+      <div class="cifra"><b>76<span style="font-size:.5em"> %</span></b>
+        <span>recall@8, hand-built lane · 53 of 70</span></div>
+      <div class="cifra"><b>61<span style="font-size:.5em"> %</span></b>
+        <span>recall@8, managed lane · 43 of 70</span></div>
+      <div class="cifra"><b>0</b>
+        <span>of 560 returned passages carry a character offset</span></div>
+      <div class="cifra"><b>0<span style="font-size:.5em"> of 5</span></b>
+        <span>gains captured by the hybrid that looked obvious</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="spine pila">
+    <p class="rotulo">The setup</p>
+    <h2>Two lanes, one yardstick</h2>
+    <p>An agent that answers with citations makes an uncomfortable promise: that the
+      quoted text actually exists in the source. The cheap way to keep it is to ask the
+      model to copy the passage. The way that holds is to have the model <em>point</em>,
+      and let code pull the text by its position and verify it.</p>
+    <p>That difference was already measured before this experiment: on the same corpus
+      and the same model, copying scores <b class="mono">141/162</b> and pointing scores
+      <b class="mono">180/180</b>. Delegating the chunking to a managed service puts that
+      architecture in doubt, because the chunk stops being ours.</p>
+    <div class="tarjetas">
+      <div class="tarjeta">
+        <h3>Lane A — hand-built</h3>
+        <p class="chico dim">Own chunker with character offsets, a dense index
+          (multilingual embeddings) plus a lexical BM25 index, fused with reciprocal rank
+          fusion. Every result knows where it starts and ends in the source document.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Lane B — managed</h3>
+        <p class="chico dim">A Knowledge Base service that extracts the PDF, chunks,
+          embeds, indexes and answers. It is never told how to chunk. It returns passages
+          of text, not pointers.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>The shared yardstick</h3>
+        <p class="chico dim">13 documents, 70 questions labelled with their literal
+          supporting evidence, a budget of 8 results. A hit means the expected evidence
+          shows up within those 8.</p>
+      </div>
+    </div>
+    <div class="losa">
+      <h3 style="margin-bottom:.6rem">A detail that shapes every number here</h3>
+      <p class="chico">The corpus is in <strong>English</strong> and the questions are
+        written in <strong>Spanish</strong> — this was built for Spanish-speaking readers
+        querying English-language research. Queries are machine-translated into the
+        corpus language before retrieval, which is why a multilingual embedding model is
+        required rather than optional. Measured: without that translation step, the
+        lexical index retrieves 2 of 70 and drags the fused ranking below the dense index
+        on its own.</p>
+    </div>
+    <details>
+      <summary>Forensic detail · why the comparison is not symmetric</summary>
+      <p class="chico dim">In lane A a hit means "the chunk <em>we</em> built contains the
+        evidence", checkable by position. In lane B it means "the passage <em>the
+        service</em> returned contains it", checkable only by searching inside the
+        returned text. The units differ, and publishing both numbers as though they
+        measured the same thing would be exactly the rigged comparison this project
+        exists to avoid. It gets declared and measured anyway, because it is the honest
+        comparison available.</p>
+    </details>
+  </div>
+</section>
+
+<section style="background:var(--surface)">
+  <div class="ancho pila-lg">
+    <div class="pila">
+      <p class="rotulo">The corpus · 37 sources, 13 with full text</p>
+      <h2>What the material is made of</h2>
+      <p class="dim" style="max-width:68ch">The real bibliography of a thesis on
+        LLM-assisted personnel selection, organised into nine thematic axes by its author.
+        The axes aren't decoration: they are the partition the question set is built on.
+        Of the 37 sources, 21 had an open-access PDF and 13 survived download and
+        verification.</p>
+    </div>
+    <div class="filtros" role="group" aria-label="Filter sources">
+      <button class="chip" data-eje="*" aria-pressed="true">all axes</button>
+      <span id="ejes-chips"></span>
+    </div>
+    <div class="scroll losa"><table id="tabla-corpus">
+      <caption class="chico dim" style="text-align:left;padding-bottom:.6rem">
+        <b>in the corpus</b> = PDF downloaded, verified and chunked. <b>open, not taken</b>
+        = an open version exists that ingestion never picked up. <b>partial</b> = the content
+        lives on the page rather than in a PDF. <b>closed</b> = no open version known.
+        <b>excluded</b> = downloaded, but turned out to be a one-page abstract.</caption>
+      <thead><tr><th>Source</th><th>Axis</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section>
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">The test set · 70 questions</p>
+      <h2>Every question, with its evidence and where each lane found it</h2>
+      <p class="dim">This is the table almost nobody publishes. Pick a question: below it
+        you get the exact passage from the paper that answers it and, for each lane, which
+        position it came back in. Empty cells are slots spent finding nothing.</p>
+      <p class="chico dim">Questions are in Spanish, as they were written and measured;
+        the evidence spans are in the corpus language.</p>
+    </div>
+
+    <div class="dos">
+      <div>
+        <div class="filtros" role="group" aria-label="Filter questions">
+          <input type="search" id="q-buscar" placeholder="Search all 70 questions…"
+                 aria-label="Search questions">
+          <button class="chip" data-f="*" aria-pressed="true">all</button>
+          <button class="chip" data-f="soloA" aria-pressed="false">only A</button>
+          <button class="chip" data-f="soloB" aria-pressed="false">only B</button>
+          <button class="chip" data-f="ninguno" aria-pressed="false">neither</button>
+        </div>
+        <div class="leyenda" style="margin-bottom:.7rem">
+          <b><i class="pip" style="background:var(--marca-a)"></i>Lane A · hand-built</b>
+          <b><i class="pip" style="background:var(--marca-b)"></i>Lane B · managed</b>
+          <b><i class="pip" style="background:var(--surface-2);border:1px solid var(--line)"></i>slot with no hit</b>
+        </div>
+        <div class="qlista" id="q-lista" role="listbox" aria-label="Test set questions"></div>
+        <p class="chico dim" id="q-conteo" style="margin-top:.6rem"></p>
+      </div>
+      <div>
+        <div class="panel" id="q-panel">
+          <p class="chico dim">Pick a question from the list to see its evidence.</p>
+        </div>
+      </div>
+    </div>
+
+    <details class="spine" style="margin-inline:0">
+      <summary>Forensic detail · how they were written and what bias they carry</summary>
+      <p class="chico dim">Questions were written while reading <em>passages</em> of the
+        document, never chunks: a question written while looking at a chunk inherits the
+        chunker's boundaries and ends up measuring the chunker. Each one declares the exact
+        text that answers it, and an automated gate verifies that text exists literally in
+        the document and computes its position. What doesn't verify doesn't get in.</p>
+      <p class="chico dim" style="margin-top:.7rem"><strong>The bias that remains, stated
+        plainly:</strong> the questions were generated by a different model than the one
+        under evaluation, which softens model-grading-itself overfitting but not the bias
+        of having written the question from its own answer. A second gate rejects any
+        question that echoes its own evidence. That is a mitigation, not a cure, which is
+        why it's said here.</p>
+    </details>
+  </div>
+</section>
+
+<section style="background:var(--surface)">
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">Results</p>
+      <h2>Delegating the whole pipeline costs 10 questions out of 70</h2>
+      <p class="dim">And 27× the latency. But the headline number misleads: what follows
+        separates the cost of delegating <em>the search engine</em> from the cost of losing
+        <em>the lexical leg</em>, which turned out to be very different things.</p>
+    </div>
+
+    <div class="losa">
+      <div class="leyenda" style="margin-bottom:1rem">
+        <b><i class="pip" style="background:var(--marca-a)"></i>hand-built</b>
+        <b><i class="pip" style="background:var(--marca-b)"></i>managed</b>
+        <b><i class="pip" style="background:var(--ink-3)"></i>control variant</b>
+      </div>
+      <div id="barras-carriles"></div>
+    </div>
+
+    <div class="tarjetas">
+      <div class="tarjeta">
+        <h3>Delegating the engine: 0</h3>
+        <p class="chico dim">With our own chunking and only the search engine delegated,
+          the result matches the exact index: 42 against 42. The managed engine loses
+          nothing.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Losing the lexical leg: −11</h3>
+        <p class="chico dim">That's the real cost of delegating. An identifier, a DOI or a
+          proper noun has no semantic neighbourhood: dense search misses them and lexical
+          search finds them.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Tying isn't doing the same thing</h3>
+        <p class="chico dim">When recall tied at 42, the top eight results matched on only
+          39 of 70. Two systems with the same number retrieving different things.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>The lever that does pay</h3>
+        <p class="chico dim">Reranking 20 candidates down to 8 with the model takes the
+          hand-built lane from 53 to <b>60 of 70</b>. It costs 1.4 s and a fraction of a
+          cent per query. No combination of lanes comes close.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">The ceiling trap</p>
+      <h2>The union of both lanes is 58 of 70. It buys nothing.</h2>
+      <p class="dim">Each lane rescues questions the other misses, so combining them looks
+        like money on the pavement. But "one of the two brought it" is what a selector that
+        knew in advance which lane is right would achieve — and no such selector exists. A
+        real system has to fit both lists into the same eight slots.</p>
+      <p>Move the split and recall recomputes from each question's real positions. It isn't
+        a simulation: it's the measured data.</p>
+    </div>
+
+    <div class="losa">
+      <label for="sl" class="chico dim">How the 8 slots are split</label>
+      <input type="range" id="sl" min="0" max="8" value="8" step="1"
+             aria-label="How many of the 8 slots go to lane A">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem" class="mono dim">
+        <span>all to managed</span><span>all to hand-built</span>
+      </div>
+      <div id="sim-out" style="margin-top:1.4rem"></div>
+    </div>
+
+    <div class="spine pila" style="margin-inline:0">
+      <p><strong>Why it fails, in arithmetic:</strong> three of the five questions the
+        managed lane rescues sit at positions 5 and 6 of its list, where no eight-slot split
+        reaches them. And the hand-built lane has <b class="mono">10</b> hits living in
+        slots 5 through 8 — exactly the ones sacrificed to make room.
+        <strong>Giving up four slots kills ten to gain two.</strong></p>
+      <details>
+        <summary>Forensic detail · and 16 slots doesn't fix it either</summary>
+        <p class="chico dim">If the problem were a lack of room, widening it would unblock
+          it. It doesn't: at 16 slots the hand-built lane alone reaches <b>57 of 70</b> and
+          the even split lands at <b>55</b>. Two different budgets, the same sign. The rule
+          that falls out: under a fixed result budget, going deeper in your own lane always
+          beats splitting it with the managed one.</p>
+        <p class="chico dim" style="margin-top:.7rem"><strong>Stated limitation:</strong>
+          the simulator doesn't deduplicate across lanes, so if both return the same passage
+          they burn two slots. Fixing that would favour the hybrid — but it would need to
+          recover between 2 and 5 questions to break even, and duplicates free up few slots.
+          Not enough to flip the sign.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--surface)">
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">The finding</p>
+      <h2>What you lose isn't recall. It's the pointer.</h2>
+      <p class="dim">Of the 560 passages the managed lane returned across the whole
+        measurement, <strong>560 carry a page number and none carries the exact position in
+        the document</strong>. The citation stops being a verifiable pointer and becomes an
+        approximate match somewhere on page N.</p>
+    </div>
+
+    <div class="dos">
+      <div class="losa pila">
+        <h3>And there's a second loss, a worse one</h3>
+        <p>The returned text is no longer our text. The service extracts the PDF with its
+          own extractor, and the same passage comes out differently from each. This is the
+          real case from the first question in the set:</p>
+        <div>
+          <p class="chico mono dim" style="margin-bottom:.35rem">our extractor</p>
+          <div class="pasaje" id="cmp-a"></div>
+        </div>
+        <div>
+          <p class="chico mono dim" style="margin-bottom:.35rem">the managed service's</p>
+          <div class="pasaje" id="cmp-b"></div>
+        </div>
+        <p>One line break. That's enough for literal verification to fail.</p>
+      </div>
+      <div class="pila">
+        <div class="losa">
+          <h3 style="margin-bottom:.8rem">The same lane, measured two ways</h3>
+          <div id="barras-literal"></div>
+          <p class="chico dim" style="margin-top:.9rem">Compared <b>literally</b> against
+            our document, the managed lane appears to collapse to 5 of 70. The 38-question
+            gap isn't missing evidence: it's line breaks. Literal measurement here isn't
+            measuring retrieval — it's measuring the disagreement between two extractors.</p>
+        </div>
+        <div class="losa">
+          <h3 style="margin-bottom:.6rem">The architectural consequence</h3>
+          <p class="chico">With a managed service, this project's deterministic citation
+            check <strong>cannot run as written</strong>: it forces you to normalise
+            whitespace. And normalising is precisely what — measured separately — welds
+            non-contiguous text together and lets something absent pass as present.</p>
+          <p class="chico" style="margin-top:.7rem">The managed lane doesn't degrade the
+            citation. <strong>It removes the floor the method stands on.</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">Method</p>
+      <h2>Five times the instrument failed, not the system</h2>
+      <p class="dim">The part of this experiment that changed its mind most wasn't the
+        result — it was the way of measuring it. Each of these started as a firm conclusion
+        and ended refuted by its own measurement.</p>
+    </div>
+    <div class="tarjetas">
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>The best PDF extractor</h3>
+        <p class="chico dim">Five rounds, seven candidates, twelve documents. The final
+          conclusion is the <em>opposite</em> of round one's: the initial winner, with a
+          spotless 33 out of 33, dropped to fourth place once an independent referee judged
+          it instead of itself.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"The managed lane retrieves less"</h3>
+        <p class="chico dim">First number: 5 of 70. I opened one concrete case and compared
+          both texts character by character: identical apart from a line break. It was
+          measuring extractor disagreement, not retrieval.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"More judges is better"</h3>
+        <p class="chico dim">Of three automated judges, two survive. The third rejected
+          <b>44 %</b> of correct answers. A judge that doesn't earn its keep is worse than
+          no judge.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"Translation is the lever"</h3>
+        <p class="chico dim">It has 15 genuine defects out of 70 and recall is identical
+          against a reference translation. Badly translated questions fail <em>less</em>
+          (13 %) than flawless ones (27 %).</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-mal">refuted</span>
+        <h3>"The hybrid adds up"</h3>
+        <p class="chico dim">The union was 58 of 70. The real hybrid captures 0 of those 5.
+          An oracle ceiling is not a system.</p>
+      </div>
+      <div class="tarjeta pila">
+        <span class="veredicto v-neutro">recurring pattern</span>
+        <h3>The default that reads as a result</h3>
+        <p class="chico dim">A mutation that never applies leaves detection measured over
+          zero cases, and <span class="mono">0/0</span> reads as 100 %. It showed up six
+          times in this project — including once where a missing dependency was reported as
+          "the service is down".</p>
+      </div>
+    </div>
+    <details class="spine" style="margin-inline:0">
+      <summary>Forensic detail · the extractors evaluated and why each fell</summary>
+      <div class="scroll"><table id="tabla-extractores">
+        <thead><tr><th>Extractor</th><th>Verdict</th><th>Measured reason</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="chico dim" style="margin-top:.8rem">De-hyphenation belongs in the normalised
+        view, never in the raw text: it lifts recovery from 57 % to 86 %, but applied to the
+        raw text it corrupts the rest by joining legitimate hyphens. That validates, by
+        measurement, the design of two representations with an index map between them.</p>
+    </details>
+  </div>
+</section>
+
+<section style="background:var(--surface)">
+  <div class="ancho pila-lg">
+    <div class="spine pila" style="margin-inline:0">
+      <p class="rotulo">Spec sheet</p>
+      <h2>What got built, and what stays open</h2>
+    </div>
+    <div class="tarjetas">
+      <div class="tarjeta"><h3>Guardrails</h3><p class="chico dim">PDF-borne prompt
+        injection and pseudonymisation at ingestion. External detection 8 of 8, with 1 false
+        rejection in 1,263. Document-borne injection is real: a PDF off the internet can
+        carry instructions a naive reader obeys.</p></div>
+      <div class="tarjeta"><h3>Automated judges</h3><p class="chico dim">Three built, two
+        switched on. Support and attribution earn their keep; completeness doesn't. The
+        attribution judge rests on 6 cases, and that gets declared rather than rounded
+        away.</p></div>
+      <div class="tarjeta"><h3>Observability</h3><p class="chico dim">Per-query trace with
+        sub-questions, scored chunks, cited chunks and rejections.
+        <b class="mono">US$ 0.000113</b> and about 3 s per query.</p></div>
+      <div class="tarjeta"><h3>Verification</h3><p class="chico dim">211 automated tests.
+        An adversarial validation pass found <b>14 defects with all of them green</b>, two of
+        which broke the system's central promise.</p></div>
+    </div>
+
+    <div class="losa">
+      <h3 style="margin-bottom:.9rem">What this experiment does not prove</h3>
+      <ul class="pila chico dim" style="padding-left:1.1rem;gap:.6rem">
+        <li>The generating model isn't the one I'd have chosen: the provider had the main
+          model family quota-blocked throughout. The judges run on the same model that
+          generates, and that's the largest bias still standing.</li>
+        <li>Thirteen documents and seventy questions can separate lanes that differ by ten
+          points, not claim differences of two.</li>
+        <li>Results hold for English-language academic papers queried in Spanish. A corpus
+          of internal documents, with tables and forms, is a different problem.</li>
+        <li>The managed service's chunking was used at its default settings. Tuning it would
+          likely move its recall; it would not move the loss of the pointer, which is
+          structural.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="ancho pila">
+    <p><strong>Manuel Argüelles</strong> · engineering lab notebook, August 2026</p>
+    <p class="chico">Every figure on this page comes from reproducible measurement harnesses
+      in the project repository. The corpus is open-access academic work, linked to its
+      original source. Account and client details from the infrastructure this ran on are
+      deliberately outside this publication.</p>
+  </div>
+</footer>
+
+<script>window.__DATA__={"corpus": {"fuentes": [{"id": "00", "titulo": "Signal or Noise? Evaluating Large Language Models in Resume Screening Across Contextual Variations and Human Expert Benchmarks", "eje": "1 · La búsqueda inicial de antecedentes", "url": "https://arxiv.org/abs/2507.08019", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "doi-10.1145-3696457", "titulo": "Fairness and Bias in Algorithmic Hiring: A Multidisciplinary Survey", "eje": "1 · La búsqueda inicial de antecedentes", "url": "https://doi.org/10.1145/3696457", "estado": "sin-oa", "pdf": false, "web": false, "clase": "parcial", "nota": "hay una sede abierta, sin PDF directo"}, {"id": "02", "titulo": "Ethics of AI-Enabled Recruiting and Selection: A Review and Research Agenda", "eje": "1 · La búsqueda inicial de antecedentes", "url": "https://doi.org/10.1007/s10551-022-05049-6", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "03", "titulo": "AI Hiring with LLMs: A Context-Aware and Explainable Multi-Agent Framework for Resume Screening", "eje": "2 · Cómo se hace el filtrado con modelos de lenguaje", "url": "https://arxiv.org/abs/2504.02870", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "doi-10.1109-ccwc67433.2026.11393696", "titulo": "LLM-Driven Resume Parsing and Job Description Matching: Evaluation on 998 Real Resumes", "eje": "2 · Cómo se hace el filtrado con modelos de lenguaje", "url": "https://doi.org/10.1109/ccwc67433.2026.11393696", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "05", "titulo": "Smart-Hiring: An Explainable end-to-end Pipeline for CV Information Extraction and Job Matching", "eje": "2 · Cómo se hace el filtrado con modelos de lenguaje", "url": "https://arxiv.org/abs/2511.02537", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "doi-10.3390-electronics14040794", "titulo": "Resume2Vec: Transforming Applicant Tracking Systems with Intelligent Resume Embeddings for", "eje": "2 · Cómo se hace el filtrado con modelos de lenguaje", "url": "https://doi.org/10.3390/electronics14040794", "estado": "sin-oa", "pdf": false, "web": false, "clase": "abierto-no-tomado", "nota": "texto completo verificado a mano: 63 523 caracteres"}, {"id": "doi-10.3390-electronics14142787", "titulo": "Explainable Use of Foundation Models for Job Hiring", "eje": "2 · Cómo se hace el filtrado con modelos de lenguaje", "url": "https://doi.org/10.3390/electronics14142787", "estado": "sin-oa", "pdf": false, "web": false, "clase": "abierto-no-tomado", "nota": "texto completo verificado a mano: 67 847 caracteres"}, {"id": "08", "titulo": "Application of LLM Agents in Recruitment: A Novel Framework for Resume Screening", "eje": "2 · Cómo se hace el filtrado con modelos de lenguaje", "url": "https://arxiv.org/abs/2401.08315", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "doi-10.1177-001979390105400403", "titulo": "An Experimental Study of Job Evaluation and Comparable Worth", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://doi.org/10.1177/001979390105400403", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.1111-j.1744-6570.2010.01207.x", "titulo": "DOING COMPETENCIES WELL: BEST PRACTICES IN COMPETENCY MODELING", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://doi.org/10.1111/j.1744-6570.2010.01207.x", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.1016-j.hrmr.2008.10.002", "titulo": "What is (or should be) the difference between competency modeling and traditional job anal", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://doi.org/10.1016/j.hrmr.2008.10.002", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.1146-annurev-psych-120710-100401", "titulo": "The Rise and Fall of Job Analysis and the Future of Work Analysis", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://doi.org/10.1146/annurev-psych-120710-100401", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.1037-0021-9010.88.4.635", "titulo": "A meta-analysis of job analysis reliability.", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://doi.org/10.1037/0021-9010.88.4.635", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.1037-0021-9010.82.5.627", "titulo": "Social and cognitive sources of potential inaccuracy in job analysis.", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://doi.org/10.1037/0021-9010.82.5.627", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "url-de92f8de", "titulo": "Mercer IPE — metodología de valuación de puestos (sitio del proveedor)", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://www.mercer.com/solutions/talent-and-rewards/job-architecture/job-evaluation-ipe/", "estado": "sin-oa", "pdf": false, "web": true, "clase": "parcial", "nota": "recurso web: contenido en la página, no en PDF"}, {"id": "url-869f2e53", "titulo": "Korn Ferry — guía de evaluación de puestos (PDF del proveedor)", "eje": "3 · Valuación de puestos y la metodología Mercer", "url": "https://www.kornferry.com/content/dam/kornferry/docs/pdfs/job-evaluation.pdf", "estado": "sin-oa", "pdf": false, "web": true, "clase": "parcial", "nota": "recurso web: contenido en la página, no en PDF"}, {"id": "17", "titulo": "RAGAs: Automated Evaluation of Retrieval Augmented Generation", "eje": "4 · RAGAS, las métricas y el juez automático", "url": "https://doi.org/10.18653/v1/2024.eacl-demo.16", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "url-19e613de", "titulo": "NeurIPS 2024 — Datasets and Benchmarks Track", "eje": "4 · RAGAS, las métricas y el juez automático", "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/27245589131d17368cccdfa990cbf16e-Abstract-Datasets_and_Benchmarks_Track.html", "estado": "sin-oa", "pdf": false, "web": true, "clase": "parcial", "nota": "recurso web: contenido en la página, no en PDF"}, {"id": "19", "titulo": "ARES: An Automated Evaluation Framework for Retrieval-Augmented Generation Systems", "eje": "4 · RAGAS, las métricas y el juez automático", "url": "https://doi.org/10.18653/v1/2024.naacl-long.20", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "20", "titulo": "Retrieval Augmented Generation or Long-Context LLMs? A Comprehensive Study and Hybrid Appr", "eje": "4 · RAGAS, las métricas y el juez automático", "url": "https://doi.org/10.18653/v1/2024.emnlp-industry.66", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "url-c3776dc2", "titulo": "ICML 2025 — póster", "eje": "4 · RAGAS, las métricas y el juez automático", "url": "https://icml.cc/virtual/2025/poster/46069", "estado": "sin-oa", "pdf": false, "web": true, "clase": "parcial", "nota": "recurso web: contenido en la página, no en PDF"}, {"id": "22", "titulo": "Evaluating RAG Metrics in Applied Contexts: An Experiment, Its Findings and Its Limitations", "eje": "4 · RAGAS, las métricas y el juez automático", "url": "https://arxiv.org/abs/2607.07302", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "url-f9a91ea0", "titulo": "RAGAS — documentación de la métrica de fidelidad", "eje": "4 · RAGAS, las métricas y el juez automático", "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/", "estado": "sin-oa", "pdf": false, "web": true, "clase": "parcial", "nota": "recurso web: contenido en la página, no en PDF"}, {"id": "24", "titulo": "Gender, Race, and Intersectional Bias in Resume Screening via Language Model Retrieval", "eje": "5 · Sesgo y equidad", "url": "https://doi.org/10.1609/aies.v7i1.31748", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "25", "titulo": "Can LLMs Hire Fairly? Racial Bias in Resume Screening", "eje": "5 · Sesgo y equidad", "url": "https://arxiv.org/abs/2606.28978", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "26", "titulo": "Gendered Language in Resumes and its Implications for Algorithmic Bias in Hiring", "eje": "5 · Sesgo y equidad", "url": "https://doi.org/10.18653/v1/2022.gebnlp-1.7", "estado": "excluida", "pdf": true, "web": false, "clase": "excluido", "nota": "descargó, pero era un resumen de una página"}, {"id": "27", "titulo": "Discriminated by an algorithm: a systematic review of discrimination and fairness by algor", "eje": "5 · Sesgo y equidad", "url": "https://doi.org/10.1007/s40685-020-00134-w", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "doi-10.1145-3603195.3603203", "titulo": "Mitigating Bias in Algorithmic Hiring: Evaluating Claims and Practices", "eje": "5 · Sesgo y equidad", "url": "https://doi.org/10.1145/3603195.3603203", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.1111-j.1468-2389.1993.tb00080.x", "titulo": "The Validity of the Employment Interview: A Meta‐Analysis", "eje": "6 · Que el criterio estructurado gana al juicio libre", "url": "https://doi.org/10.1111/j.1468-2389.1993.tb00080.x", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.1080-1359432x.2019.1681401", "titulo": "Personnel selection in the digital age: a review of validity and applicant reactions, and", "eje": "6 · Que el criterio estructurado gana al juicio libre", "url": "https://doi.org/10.1080/1359432x.2019.1681401", "estado": "sin-oa", "pdf": false, "web": false, "clase": "abierto-no-tomado", "nota": "OpenAlex reporta PDF abierto en Bradford Scholars (University of Bradford)"}, {"id": "doi-10.1037-apl0000994", "titulo": "Revisiting meta-analytic estimates of validity in personnel selection: Addressing systemat", "eje": "6 · Que el criterio estructurado gana al juicio libre", "url": "https://doi.org/10.1037/apl0000994", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}, {"id": "doi-10.2139-ssrn.5958495", "titulo": "&amp;nbsp;Adversarial Verification as Reference Architecture for EU AI Act Article 14 Comp", "eje": "7 · Cumplimiento y gobernanza", "url": "https://doi.org/10.2139/ssrn.5958495", "estado": "sin-oa", "pdf": false, "web": false, "clase": "parcial", "nota": "hay una sede abierta, sin PDF directo"}, {"id": "doi-10.2139-ssrn.5703842", "titulo": "Auditing Effects on Employment Hiring: Evidence from the New York City Algorithmic Bias Au", "eje": "7 · Cumplimiento y gobernanza", "url": "https://doi.org/10.2139/ssrn.5703842", "estado": "sin-oa", "pdf": false, "web": false, "clase": "parcial", "nota": "hay una sede abierta, sin PDF directo"}, {"id": "doi-10.1145-3461702.3462531", "titulo": "Algorithmic Hiring in Practice", "eje": "7 · Cumplimiento y gobernanza", "url": "https://doi.org/10.1145/3461702.3462531", "estado": "sin-oa", "pdf": false, "web": false, "clase": "abierto-no-tomado", "nota": "OpenAlex reporta PDF abierto en otra sede"}, {"id": "35", "titulo": "AI Security Beyond Core Domains: Resume Screening as a Case Study of Adversarial Vulnerabilities in Specialized LLM Applications", "eje": "8 · El currículum adversarial", "url": "https://arxiv.org/abs/2512.20164", "estado": "incluida", "pdf": true, "web": false, "clase": "ingerido", "nota": null}, {"id": "url-0dfb730c", "titulo": "gob.pe", "eje": "9 · Lo que medimos nosotros", "url": "http://gob.pe/", "estado": "sin-oa", "pdf": false, "web": false, "clase": "cerrado", "nota": null}], "total": 37, "con_pdf": 14, "ejes": ["1 · La búsqueda inicial de antecedentes", "2 · Cómo se hace el filtrado con modelos de lenguaje", "3 · Valuación de puestos y la metodología Mercer", "4 · RAGAS, las métricas y el juez automático", "5 · Sesgo y equidad", "6 · Que el criterio estructurado gana al juicio libre", "7 · Cumplimiento y gobernanza", "8 · El currículum adversarial", "9 · Lo que medimos nosotros"], "no_tomadas": 4, "paginas": 279, "chars": 881043, "chunks_propios": 625, "chunks_bedrock": 1076}, "gold": {"preguntas": [{"id": "q-00-01", "doc": "00", "tipo": "comparativa", "pregunta": "¿Cómo adaptan los reclutadores humanos sus criterios según el tipo de empresa, y de dónde tienen que inferir esa preferencia los modelos de lenguaje?", "span": "large corporations may prioritize formal credentials, while startups may value adaptability and innovation", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-00-02", "doc": "00", "tipo": "metodologica", "pregunta": "¿Cuántos objetivos se plantea el estudio y cuál es el primero?", "span": "Our objectives are fourfold: first, to determine whether LLMs exhibit significant differences in scoring across contexts", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": null}, {"id": "q-00-03", "doc": "00", "tipo": "metodologica", "pregunta": "¿Qué se hizo para que la variación entre evaluaciones no viniera de cómo se presentó la tarea?", "span": "All LLM evaluations were conducted using identical prompt formats and input materials to minimize variation due to differences in task presentation", "a8": 1, "b8": 5, "b8_literal": null, "a16": 1, "b16": 5}, {"id": "q-00-04", "doc": "00", "tipo": "factual", "pregunta": "¿Qué recaudos éticos se tomaron con los currículums y con los expertos humanos que participaron?", "span": "All resume materials were thoroughly anonymized to protect candidate privacy while preserving relevant professional information", "a8": 3, "b8": 1, "b8_literal": null, "a16": 3, "b16": 1}, {"id": "q-00-05", "doc": "00", "tipo": "factual", "pregunta": "¿Qué recomienda el estudio que hagan las organizaciones con las descripciones de puesto y con la supervisión humana?", "span": "Organizations should standardize job descriptions to enhance LLM reliability and retain human oversight for complex evaluations", "a8": 2, "b8": 5, "b8_literal": null, "a16": 2, "b16": 5}, {"id": "q-00-06", "doc": "00", "tipo": "factual", "pregunta": "¿A qué teoría contribuye el estudio y de qué manera?", "span": "The study advances Signal Detection Theory by linking decision-making reliability to information quality", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": null}, {"id": "q-02-01", "doc": "02", "tipo": "comparativa", "pregunta": "¿Por qué un error de un sistema algorítmico pesa distinto en una plataforma de streaming que en un proceso de selección?", "span": "when AI decisions are incorporated into hiring processes, applicants cannot reject them, and inaccuracies become problematic", "a8": 8, "b8": 6, "b8_literal": null, "a16": null, "b16": 6}, {"id": "q-02-02", "doc": "02", "tipo": "metodologica", "pregunta": "¿En cuántas formas dice el artículo que contribuye a la literatura?", "span": "Our paper contributes to the literature in three ways", "a8": 8, "b8": null, "b8_literal": null, "a16": 14, "b16": null}, {"id": "q-02-03", "doc": "02", "tipo": "metodologica", "pregunta": "¿Qué distinción hacen los autores al mapear las consideraciones éticas?", "span": "we distinguish between aspects that are, on the one hand, clearly characterized as morally good and thus as ethical opportunities", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-02-04", "doc": "02", "tipo": "factual", "pregunta": "¿Cuándo entró en vigor el GDPR y cómo lo caracteriza el artículo respecto de otras regulaciones?", "span": "which came into effect in May 2018, is one of the strictest", "a8": 2, "b8": 1, "b8_literal": null, "a16": 2, "b16": 1}, {"id": "q-02-05", "doc": "02", "tipo": "factual", "pregunta": "¿Encontró la revisión algún artículo que analizara el reclutamiento con IA desde una teoría ética establecida?", "span": "we did not find any article that provided a normative ethical analysis of AI recruiting by linking it to an established ethical lens", "a8": 1, "b8": null, "b8_literal": null, "a16": 1, "b16": 9}, {"id": "q-02-06", "doc": "02", "tipo": "factual", "pregunta": "¿Desde qué perspectivas se aborda el tema en la literatura revisada?", "span": "The topic is addressed from theoretical, practitioner, legal, technical and descriptive perspectives", "a8": 4, "b8": 1, "b8_literal": null, "a16": 4, "b16": 1}, {"id": "q-03-01", "doc": "03", "tipo": "factual", "pregunta": "¿Qué permite ajustar dinámicamente a los reclutadores la integración de RAG en el sistema?", "span": "By integrating RAG, our system allows recruiters to dy", "a8": 1, "b8": 4, "b8_literal": 4, "a16": 1, "b16": 4}, {"id": "q-03-02", "doc": "03", "tipo": "factual", "pregunta": "¿Cuál es la responsabilidad del agente evaluador dentro del marco multiagente?", "span": "Resume evaluator, which assigns scores based on predefined criteria while integrating external knowledge via RAG", "a8": 8, "b8": 1, "b8_literal": null, "a16": 8, "b16": 1}, {"id": "q-03-03", "doc": "03", "tipo": "factual", "pregunta": "¿Qué evalúa cada uno de los tres sub-agentes del resumidor?", "span": "The CEO agent assesses leadership potential, the CTO agent evaluates technical expertise, and the HR agent focuses on soft skills and cultural fit", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-03-04", "doc": "03", "tipo": "metodologica", "pregunta": "¿Qué mide la correlación de Spearman en la evaluación del sistema, y en qué se diferencia de la de Pearson?", "span": "it captures non-linear relationships by ranking the scores be", "a8": 5, "b8": null, "b8_literal": null, "a16": 5, "b16": 14}, {"id": "q-03-05", "doc": "03", "tipo": "comparativa", "pregunta": "¿Qué reciben los reclutadores en un enfoque de modelo único frente al enfoque modular propuesto?", "span": "Unlike single model approaches, where recruiters receive only a final score without insight into the reasoning process", "a8": 2, "b8": 5, "b8_literal": null, "a16": 2, "b16": 5}, {"id": "q-03-06", "doc": "03", "tipo": "factual", "pregunta": "¿Puede el sistema adaptarse a criterios de puntuación propios de una empresa sin reentrenar el modelo?", "span": "the system can assess resumes against company-specific scoring criteria in a context-aware and tailored manner without requiring model retraining", "a8": null, "b8": null, "b8_literal": null, "a16": 10, "b16": null}, {"id": "q-05-01", "doc": "05", "tipo": "factual", "pregunta": "¿Qué problemas introduce el cribado manual de currículums además del tiempo que consume?", "span": "This manual screening not only demands significant effort and time but also introduces inconsistencies and biases in candidate selection", "a8": null, "b8": 5, "b8_literal": null, "a16": null, "b16": 5}, {"id": "q-05-02", "doc": "05", "tipo": "metodologica", "pregunta": "¿Sobre qué tamaño de conjunto de datos se evaluó el sistema?", "span": "a real-world dataset containing more than a thousand of resumes and hundreds of job descriptions spanning multiple professional domains", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": null}, {"id": "q-05-03", "doc": "05", "tipo": "metodologica", "pregunta": "¿Qué pasos de normalización aplica el sistema después de extraer el texto?", "span": "This includes removing unwanted symbols, correcting accented or malformed characters, standardizing whitespace and punctuation", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-05-04", "doc": "05", "tipo": "metodologica", "pregunta": "¿Cómo se determinan los pesos de cada criterio de emparejamiento?", "span": "Attribute weights are empirically determined based on domain expertise", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-05-05", "doc": "05", "tipo": "comparativa", "pregunta": "¿Qué ofrece Smart-Hiring que los sistemas que sólo calculan similitud de embeddings no dan?", "span": "Smart-Hiring provides explicit reasoning behind its recommendations by highlighting matched skills and experience", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-05-06", "doc": "05", "tipo": "factual", "pregunta": "¿Qué aporta la capa de explicabilidad del sistema según las conclusiones?", "span": "highlighting key factors driving candidate ranking decisions", "a8": 7, "b8": null, "b8_literal": null, "a16": 14, "b16": null}, {"id": "q-08-01", "doc": "08", "tipo": "metodologica", "pregunta": "¿Contra qué se comparó el desempeño de los modelos de lenguaje en el experimento?", "span": "The performance of the LLMs was benchmarked against this manually labeled dataset", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": null}, {"id": "q-08-02", "doc": "08", "tipo": "metodologica", "pregunta": "¿Cómo se unifican currículums que llegan en formatos distintos antes de procesarlos?", "span": "This is achieved through a rule-based algorithm designed to standardize the diverse formatting and file types into coherent, individual sentences", "a8": 2, "b8": null, "b8_literal": null, "a16": 2, "b16": null}, {"id": "q-08-03", "doc": "08", "tipo": "factual", "pregunta": "¿Por qué introducir una oración en el modelo no garantiza que devuelva la etiqueta esperada?", "span": "the underlying reason for this is the model's design to respond according to the instruction dataset's guidelines", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-08-04", "doc": "08", "tipo": "factual", "pregunta": "¿En cuántos procesos se divide la fase final de evaluación de candidatos?", "span": "we have bifurcated this stage into two distinct pro", "a8": 3, "b8": null, "b8_literal": null, "a16": 3, "b16": null}, {"id": "q-08-05", "doc": "08", "tipo": "comparativa", "pregunta": "¿En qué aspecto supera significativamente el agente al cribado manual tradicional?", "span": "in terms of time efficiency, the LLM agent significantly surpasses traditional manual screening methods", "a8": 1, "b8": 3, "b8_literal": null, "a16": 1, "b16": 3}, {"id": "q-17-01", "doc": "17", "tipo": "factual", "pregunta": "¿Con qué dos frameworks de construcción de sistemas RAG se integra la herramienta?", "span": "The RAGAS framework provides an integration with both llama", "a8": 1, "b8": null, "b8_literal": null, "a16": 1, "b16": null}, {"id": "q-17-02", "doc": "17", "tipo": "factual", "pregunta": "¿La métrica de relevancia de la respuesta tiene en cuenta si la respuesta es verdadera?", "span": "our assessment of answer relevance does not take into account fac", "a8": 1, "b8": 5, "b8_literal": null, "a16": 1, "b16": 5}, {"id": "q-17-03", "doc": "17", "tipo": "factual", "pregunta": "¿Qué penaliza específicamente la métrica de relevancia del contexto?", "span": "this metric aims to penalise the inclusion of redundant information", "a8": 3, "b8": null, "b8_literal": null, "a16": 3, "b16": null}, {"id": "q-17-04", "doc": "17", "tipo": "metodologica", "pregunta": "¿Por qué dos corridas del mismo experimento con la misma configuración pueden dar resultados distintos?", "span": "because of an undocumented change in the underlying API, or because of the inherent randomness in neural networks", "a8": 2, "b8": null, "b8_literal": null, "a16": null, "b16": null}, {"id": "q-17-05", "doc": "17", "tipo": "factual", "pregunta": "¿Qué proveedor usan por defecto las métricas de la biblioteca?", "span": "The metrics available at ragas.metrics use OpenAI's API by default", "a8": 2, "b8": 3, "b8_literal": null, "a16": 2, "b16": 3}, {"id": "q-17-06", "doc": "17", "tipo": "factual", "pregunta": "¿Qué tipo de modelos recomiendan priorizar los autores al elegir el evaluador?", "span": "open models over full-fledged products behind paid APIs", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": 16}, {"id": "q-19-01", "doc": "19", "tipo": "metodologica", "pregunta": "¿Cuándo se deja de entrenar a los jueces del sistema?", "span": "stopping when we have three epochs with no improvement in loss", "a8": null, "b8": null, "b8_literal": null, "a16": 15, "b16": null}, {"id": "q-19-02", "doc": "19", "tipo": "metodologica", "pregunta": "¿Para qué usa el método el conjunto de validación de preferencias humanas?", "span": "PPI uses the LLM judges on the hu", "a8": 2, "b8": 3, "b8_literal": 3, "a16": 2, "b16": 3}, {"id": "q-19-03", "doc": "19", "tipo": "factual", "pregunta": "¿Sobre qué se entrenan los jueces ligeros que propone el marco?", "span": "ARES offers a novel training pipeline for fine-tuning lightweight LLM judges on synthetically generated queries and answers", "a8": 1, "b8": 4, "b8_literal": null, "a16": 1, "b16": 4}, {"id": "q-19-04", "doc": "19", "tipo": "factual", "pregunta": "¿Qué ventaja da poder evaluar cada componente por separado?", "span": "ARES can evaluate each component of a RAG sys", "a8": 7, "b8": null, "b8_literal": null, "a16": 3, "b16": null}, {"id": "q-20-01", "doc": "20", "tipo": "comparativa", "pregunta": "¿Qué función conceptual cumple la recuperación respecto de la atención del modelo?", "span": "RAG conceptually acts as a prior, regularizing the attention of LLMs onto retrieved segments", "a8": null, "b8": null, "b8_literal": null, "a16": 16, "b16": null}, {"id": "q-20-02", "doc": "20", "tipo": "factual", "pregunta": "¿En qué supuesto se apoya el método que enruta consultas por auto-reflexión?", "span": "under the assumption that LLMs are well-calibrated in predicting whether a query is answerable given provided context", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-20-03", "doc": "20", "tipo": "metodologica", "pregunta": "¿Cómo determinaron los autores las razones por las que fallaba la recuperación?", "span": "We first manually check some examples for which our RAG-and-Route step predicts", "a8": 3, "b8": null, "b8_literal": null, "a16": 3, "b16": null}, {"id": "q-20-04", "doc": "20", "tipo": "factual", "pregunta": "¿Por qué una consulta que exige razonamiento en varios pasos le cuesta al recuperador?", "span": "The query requires multi-step reasoning so the results of previous steps are needed to retrieve information for later steps", "a8": 1, "b8": 3, "b8_literal": null, "a16": 1, "b16": 3}, {"id": "q-20-05", "doc": "20", "tipo": "comparativa", "pregunta": "¿Cuándo sigue siendo preferible la recuperación aunque el contexto largo rinda mejor?", "span": "RAG remains a viable option due to its lower cost and advantages when the input considerably exceeds the model's context window size", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": 9}, {"id": "q-20-06", "doc": "20", "tipo": "factual", "pregunta": "¿Qué se le indica al modelo que responda cuando la pregunta no se puede contestar con los pasajes?", "span": "If the question cannot be answered based on the information in the article, write", "a8": 3, "b8": 1, "b8_literal": null, "a16": 3, "b16": 1}, {"id": "q-22-01", "doc": "22", "tipo": "metodologica", "pregunta": "¿Qué se obtiene al comparar los fragmentos recuperados contra los de referencia?", "span": "comparing retrieved spans with reference spans produces a retriever perfor", "a8": 5, "b8": null, "b8_literal": null, "a16": 5, "b16": null}, {"id": "q-22-02", "doc": "22", "tipo": "metodologica", "pregunta": "¿Cómo se define la exhaustividad en este estudio y por qué se eligió esa métrica?", "span": "Recall is defined as the proportion of relevant elements actually present in the top k spans returned by the retriever", "a8": 4, "b8": null, "b8_literal": null, "a16": 4, "b16": 14}, {"id": "q-22-03", "doc": "22", "tipo": "factual", "pregunta": "¿Para qué sirven principalmente las métricas de generación según los autores?", "span": "The primary purpose of these metrics is to study certain generator behaviors and not its performance in the strict sense", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-22-04", "doc": "22", "tipo": "comparativa", "pregunta": "¿Por qué que una métrica correlacione bien con el juicio humano no alcanza para confiar en ella?", "span": "observing that a given metric correlates well with human judgment is not sufficient to affirm that it measures what we want it to measure", "a8": 1, "b8": 1, "b8_literal": null, "a16": 1, "b16": 1}, {"id": "q-22-05", "doc": "22", "tipo": "factual", "pregunta": "¿Qué riesgo hay en incorporar demasiados sistemas al estudio de correlación?", "span": "integrating too many systems risks making the annotation task costly", "a8": 1, "b8": 2, "b8_literal": null, "a16": 1, "b16": 2}, {"id": "q-24-01", "doc": "24", "tipo": "factual", "pregunta": "¿Cuánto puede aumentar la cantidad de resultados sesgados al acortar un documento?", "span": "can increase the number of biased outcomes by 22.2%", "a8": 2, "b8": 2, "b8_literal": null, "a16": 2, "b16": 2}, {"id": "q-24-02", "doc": "24", "tipo": "metodologica", "pregunta": "¿Por qué es difícil reproducir investigación que usa descripciones de puesto tomadas de la web?", "span": "they are frequently removed or altered as positions fill or re", "a8": 1, "b8": 1, "b8_literal": 1, "a16": 1, "b16": 1}, {"id": "q-24-03", "doc": "24", "tipo": "metodologica", "pregunta": "¿Qué prueba estadística se usa para decidir si un grupo está sobrerrepresentado en la selección?", "span": "A chi-square test is used to determine whether the selected resumes are distributed uniformly amongst rel", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": null}, {"id": "q-24-04", "doc": "24", "tipo": "metodologica", "pregunta": "¿Qué se comparó para confirmar que el enfoque de recuperación servía para el cribado?", "span": "The cosine similarity scores of these two groups were compared to verify that the document retrieval approach is suitable for resume screening", "a8": 1, "b8": 2, "b8_literal": null, "a16": 1, "b16": 2}, {"id": "q-24-05", "doc": "24", "tipo": "factual", "pregunta": "¿A qué grupos de raza y género se limitó el análisis?", "span": "This study was limited to analyzing only two of the most commonly studied race", "a8": null, "b8": 6, "b8_literal": null, "a16": 16, "b16": 6}, {"id": "q-24-06", "doc": "24", "tipo": "factual", "pregunta": "¿Qué tensión deben resolver quienes investigan sobre documentos con señales de identidad?", "span": "Researchers interested in trans", "a8": 1, "b8": 2, "b8_literal": 2, "a16": 1, "b16": 2}, {"id": "q-25-01", "doc": "25", "tipo": "metodologica", "pregunta": "¿Cómo se calcularon los intervalos de confianza de la brecha por raza y sobre cuántos conglomerados?", "span": "cluster-bootstrap 95% confidence intervals (2,000 replications over 6,006 posting clusters)", "a8": 5, "b8": null, "b8_literal": null, "a16": 5, "b16": null}, {"id": "q-25-02", "doc": "25", "tipo": "metodologica", "pregunta": "¿Cuántos pares de currículums por modelo se usaron en la auditoría de género?", "span": "a paired correspondence audit with 48,048 Male-Female resume pairs per model", "a8": 7, "b8": 3, "b8_literal": null, "a16": 7, "b16": 3}, {"id": "q-27-01", "doc": "27", "tipo": "factual", "pregunta": "¿Cuál es el vacío de investigación principal que identifica la revisión?", "span": "we identify several research gaps, mainly a lacking focus on perceived fairness", "a8": null, "b8": null, "b8_literal": null, "a16": null, "b16": null}, {"id": "q-27-02", "doc": "27", "tipo": "factual", "pregunta": "¿Qué se busca descubrir con el perfilado de datos y qué le aporta a la empresa?", "span": "It aims to discover the meaningful features of data sets", "a8": 3, "b8": 1, "b8_literal": 1, "a16": 2, "b16": 1}, {"id": "q-27-03", "doc": "27", "tipo": "factual", "pregunta": "¿Qué ejemplo dan de una variable que predice permanencia pero discrimina si se usa para contratar?", "span": "the distance between the workplace and home is a strong predictor of job tenure", "a8": 2, "b8": 2, "b8_literal": null, "a16": 2, "b16": 2}, {"id": "q-27-04", "doc": "27", "tipo": "comparativa", "pregunta": "¿Qué aspecto de la decisión algorítmica recibió poca atención frente a sus ventajas organizativas?", "span": "the possible downsides in terms of biases, discrimination, and perceived unfairness have found little attention in HRM", "a8": 3, "b8": 8, "b8_literal": null, "a16": 3, "b16": 8}, {"id": "q-27-05", "doc": "27", "tipo": "factual", "pregunta": "¿Por qué los sesgos implícitos resultan más problemáticos que los evidentes?", "span": "implicit discrimination of less apparent personal characteristics might be more problematic, because such implicit biases are more difficult to detect", "a8": 2, "b8": null, "b8_literal": null, "a16": 2, "b16": null}, {"id": "q-27-06", "doc": "27", "tipo": "factual", "pregunta": "¿Qué recomiendan los autores respecto de delegar la decisión enteramente en el algoritmo?", "span": "companies should not solely rely on the information provided by algorithms or even implement automatic decision-making without any control", "a8": null, "b8": 6, "b8_literal": null, "a16": null, "b16": 6}, {"id": "q-35-01", "doc": "35", "tipo": "metodologica", "pregunta": "¿Cómo se formaliza la tarea de emparejamiento entre puesto y candidatos?", "span": "given a job description J specifying required skills, experience, and qualifications", "a8": null, "b8": 3, "b8_literal": null, "a16": 12, "b16": 3}, {"id": "q-35-02", "doc": "35", "tipo": "factual", "pregunta": "¿Qué ventaja tiene el enfoque entre dominios para entrenar la defensa?", "span": "without requiring extensive collection of domain-specific adversarial data", "a8": 2, "b8": 4, "b8_literal": null, "a16": 2, "b16": 4}, {"id": "q-35-03", "doc": "35", "tipo": "factual", "pregunta": "¿Cuál es la primera medida del esquema de defensa en profundidad que proponen?", "span": "normalize resumes to plain text, strip or neutralize HTML/CSS, remove zero-size or off-screen content", "a8": null, "b8": null, "b8_literal": null, "a16": 10, "b16": null}, {"id": "q-35-04", "doc": "35", "tipo": "factual", "pregunta": "¿Cómo debe separarse la instrucción de tarea de los datos del candidato?", "span": "enforce strict channel separation between task instructions (job requirements) and candidate data using explicit delimiters and schemas", "a8": null, "b8": 1, "b8_literal": null, "a16": null, "b16": 1}, {"id": "q-35-05", "doc": "35", "tipo": "comparativa", "pregunta": "¿En qué se diferencian estos ataques de un jailbreak clásico?", "span": "Unlike jailbreaks that bypass safety guardrails to generate prohibited content, our attacks corrupt the reasoning process", "a8": 4, "b8": 2, "b8_literal": null, "a16": 4, "b16": 2}, {"id": "q-35-06", "doc": "35", "tipo": "factual", "pregunta": "¿Qué factores deben considerarse secundarios salvo que el aviso diga lo contrario?", "span": "Consider education and location as secondary factors unless the job description explicitly states they are critical", "a8": 5, "b8": 3, "b8_literal": null, "a16": 5, "b16": 3}], "n": 70, "tipos": {"comparativa": 10, "metodologica": 22, "factual": 38}, "titulos": {"00": "Signal or Noise? Evaluating Large Language Models in Resume Screening Across Contextual Variations and Human Expert Benchmarks", "doi-10.1145-3696457": "Fairness and Bias in Algorithmic Hiring: A Multidisciplinary Survey", "02": "Ethics of AI-Enabled Recruiting and Selection: A Review and Research Agenda", "03": "AI Hiring with LLMs: A Context-Aware and Explainable Multi-Agent Framework for Resume Screening", "doi-10.1109-ccwc67433.2026.11393696": "LLM-Driven Resume Parsing and Job Description Matching: Evaluation on 998 Real Resumes", "05": "Smart-Hiring: An Explainable end-to-end Pipeline for CV Information Extraction and Job Matching", "doi-10.3390-electronics14040794": "Resume2Vec: Transforming Applicant Tracking Systems with Intelligent Resume Embeddings for", "doi-10.3390-electronics14142787": "Explainable Use of Foundation Models for Job Hiring", "08": "Application of LLM Agents in Recruitment: A Novel Framework for Resume Screening", "doi-10.1177-001979390105400403": "An Experimental Study of Job Evaluation and Comparable Worth", "doi-10.1111-j.1744-6570.2010.01207.x": "DOING COMPETENCIES WELL: BEST PRACTICES IN COMPETENCY MODELING", "doi-10.1016-j.hrmr.2008.10.002": "What is (or should be) the difference between competency modeling and traditional job anal", "doi-10.1146-annurev-psych-120710-100401": "The Rise and Fall of Job Analysis and the Future of Work Analysis", "doi-10.1037-0021-9010.88.4.635": "A meta-analysis of job analysis reliability.", "doi-10.1037-0021-9010.82.5.627": "Social and cognitive sources of potential inaccuracy in job analysis.", "url-de92f8de": "Mercer IPE — metodología de valuación de puestos (sitio del proveedor)", "url-869f2e53": "Korn Ferry — guía de evaluación de puestos (PDF del proveedor)", "17": "RAGAs: Automated Evaluation of Retrieval Augmented Generation", "url-19e613de": "NeurIPS 2024 — Datasets and Benchmarks Track", "19": "ARES: An Automated Evaluation Framework for Retrieval-Augmented Generation Systems", "20": "Retrieval Augmented Generation or Long-Context LLMs? A Comprehensive Study and Hybrid Appr", "url-c3776dc2": "ICML 2025 — póster", "22": "Evaluating RAG Metrics in Applied Contexts: An Experiment, Its Findings and Its Limitations", "url-f9a91ea0": "RAGAS — documentación de la métrica de fidelidad", "24": "Gender, Race, and Intersectional Bias in Resume Screening via Language Model Retrieval", "25": "Can LLMs Hire Fairly? Racial Bias in Resume Screening", "26": "Gendered Language in Resumes and its Implications for Algorithmic Bias in Hiring", "27": "Discriminated by an algorithm: a systematic review of discrimination and fairness by algor", "doi-10.1145-3603195.3603203": "Mitigating Bias in Algorithmic Hiring: Evaluating Claims and Practices", "doi-10.1111-j.1468-2389.1993.tb00080.x": "The Validity of the Employment Interview: A Meta‐Analysis", "doi-10.1080-1359432x.2019.1681401": "Personnel selection in the digital age: a review of validity and applicant reactions, and", "doi-10.1037-apl0000994": "Revisiting meta-analytic estimates of validity in personnel selection: Addressing systemat", "doi-10.2139-ssrn.5958495": "&amp;nbsp;Adversarial Verification as Reference Architecture for EU AI Act Article 14 Comp", "doi-10.2139-ssrn.5703842": "Auditing Effects on Employment Hiring: Evidence from the New York City Algorithmic Bias Au", "doi-10.1145-3461702.3462531": "Algorithmic Hiring in Practice", "35": "AI Security Beyond Core Domains: Resume Screening as a Case Study of Adversarial Vulnerabilities in Specialized LLM Applications", "url-0dfb730c": "gob.pe"}}, "carriles": {"a8": {"recall": 53, "mrr": 0.46, "p50": 0.015, "top1": 22}, "b8": {"recall": 43, "mrr": 0.367, "p50": 0.4, "top1": 18}, "b8_literal": {"recall": 5, "mrr": 0.044}, "a8_rerank": {"recall": 60, "mrr": 0.69, "costo": 0.0017, "latencia_extra": 1.4}, "a8_denso": {"recall": 42, "mrr": 0.349}, "b_s3v": {"recall": 42, "mrr": 0.349, "p50": 0.493}, "a16": {"recall": 57}, "b16": {"recall": 48}}, "hibrido": {"union8": 58, "union16": 63, "hibrido16": 55, "rescata": ["q-05-01", "q-24-05", "q-27-06", "q-35-01", "q-35-04"], "a_en_slots_5_8": 10}, "trazabilidad": {"pasajes": 560, "con_pagina": 560, "con_offset": 0}, "costo": {"por_consulta": 0.000113, "latencia_s": 3, "total_proyecto": 2.09}, "extractores": [{"n": "pymupdf (por bloques)", "v": "elegido", "nota": "des-hifenación en la vista normalizada; conserva offsets"}, {"n": "pdfmux", "v": "descartado", "nota": "no expone offsets, y envuelve al mismo motor con el que se lo compara"}, {"n": "pdfplumber", "v": "descartado", "nota": "8 % de concordancia: reflowea el texto al extraerlo"}, {"n": "Textract (OCR)", "v": "descartado", "nota": "571× más lento; y saca el documento del perímetro regional"}, {"n": "docling", "v": "descartado", "nota": "94 s por página"}], "tests": 211, "decisiones": 79};</script>
+<script>
+(function(){
+"use strict";
+const D = window.__DATA__;
+const $ = (s,r)=> (r||document).querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ── barras: una marca por fila, etiqueta directa, sin leyenda de color sola ── */
+function barras(nodo, filas, max){
+  nodo.innerHTML = filas.map(f => `
+    <div class="barra ${f.clase}">
+      <span class="etq">${esc(f.etq)}</span>
+      <span class="pista"><i style="width:${(f.v/max*100).toFixed(1)}%"></i></span>
+      <span class="val">${esc(f.txt)}</span>
+    </div>`).join("");
+}
+
+const C = D.carriles;
+barras($("#barras-carriles"), [
+  {etq:"A · reranked", v:C.a8_rerank.recall, txt:"60/70", clase:"a"},
+  {etq:"A · dense+lexical", v:C.a8.recall, txt:"53/70", clase:"a"},
+  {etq:"A · dense only", v:C.a8_denso.recall, txt:"42/70", clase:"gris"},
+  {etq:"B · Knowledge Base", v:C.b8.recall, txt:"43/70", clase:"b"},
+  {etq:"B · engine only", v:C.b_s3v.recall, txt:"42/70", clase:"b"},
+], 70);
+
+barras($("#barras-literal"), [
+  {etq:"normalised", v:C.b8.recall, txt:"43/70", clase:"b"},
+  {etq:"literal", v:C.b8_literal.recall, txt:"5/70", clase:"gris"},
+], 70);
+
+/* ── corpus ─────────────────────────────────────────────────────────── */
+// What is known about access, at the confidence it was known. This column used to read
+// "no access" — a claim about the content, when the underlying data only spoke about the
+// PDF. See the audit note under the table.
+const ACCESO = {
+  "ingerido":          ["in the corpus",   "v-ok"],
+  "abierto-no-tomado": ["open, not taken", "v-mal"],
+  "parcial":           ["partial",         "v-neutro"],
+  "cerrado":           ["closed",          "v-neutro"],
+  "excluido":          ["excluded",        "v-mal"],
+};
+const EJE_EN = {
+  "1 · La búsqueda inicial de antecedentes": "1 · Prior work",
+  "2 · Cómo se hace el filtrado con modelos de lenguaje": "2 · LLM-based screening",
+  "3 · Valuación de puestos y la metodología Mercer": "3 · Job evaluation methodology",
+  "4 · RAGAS, las métricas y el juez automático": "4 · RAG metrics and LLM judges",
+  "5 · Sesgo y equidad": "5 · Bias and fairness",
+  "6 · Que el criterio estructurado gana al juicio libre": "6 · Structured criteria beat free judgement",
+  "7 · Cumplimiento y gobernanza": "7 · Compliance and governance",
+  "8 · El currículum adversarial": "8 · The adversarial résumé",
+  "9 · Lo que medimos nosotros": "9 · What we measure ourselves",
+};
+const eje = e => EJE_EN[e] || e;
+const NOTA_EN = {
+  "texto completo verificado a mano": "full text verified by hand",
+  "OpenAlex reporta PDF abierto en": "OpenAlex reports an open PDF at",
+  "hay una sede abierta, sin PDF directo": "an open venue exists, no direct PDF",
+  "recurso web: contenido en la página, no en PDF": "web resource: content on the page, not a PDF",
+  "descargó, pero era un resumen de una página": "downloaded, but it was a one-page abstract",
+  "caracteres": "characters", "otra sede": "another venue",
+};
+const traducirNota = n => n ? Object.entries(NOTA_EN)
+  .reduce((t,[es,en]) => t.replace(es,en), n) : n;
+const tbodyC = $("#tabla-corpus tbody");
+let ejeSel = "*";
+$("#ejes-chips").innerHTML = D.corpus.ejes.map(e =>
+  `<button class="chip" data-eje="${esc(e)}" aria-pressed="false" title="${esc(eje(e))}">${esc(e.split(" · ")[0])}</button>`).join("");
+function pintaCorpus(){
+  const fs = D.corpus.fuentes.filter(f => ejeSel === "*" || f.eje === ejeSel);
+  tbodyC.innerHTML = fs.map(f => {
+    const [txt, cls] = ACCESO[f.clase] || [f.clase,"v-neutro"];
+    return `<tr>
+      <td>${esc(f.titulo)}${f.web?' <span class="chico dim">· web resource</span>':""}
+        ${f.nota?`<span class="chico dim" style="display:block">${esc(traducirNota(f.nota))}</span>`:""}</td>
+      <td class="chico dim">${esc(eje(f.eje))}</td>
+      <td><span class="veredicto ${cls}">${esc(txt)}</span></td>
+      <td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer" class="mono chico">open ↗</a>` : '<span class="dim chico">—</span>'}</td>
+    </tr>`;
+  }).join("");
+}
+document.querySelectorAll("[data-eje]").forEach(b => b.addEventListener("click", () => {
+  ejeSel = b.dataset.eje;
+  document.querySelectorAll("[data-eje]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+  pintaCorpus();
+}));
+pintaCorpus();
+
+/* ── extractores ────────────────────────────────────────────────────── */
+$("#tabla-extractores tbody").innerHTML = D.extractores.map(e => `<tr>
+  <td class="mono">${esc(e.n)}</td>
+  <td><span class="veredicto ${e.v==="elegido"?"v-ok":"v-mal"}">${esc(e.v)}</span></td>
+  <td class="chico dim">${esc(e.nota)}</td></tr>`).join("");
+
+/* ── explorador de las 70 preguntas ─────────────────────────────────── */
+const tira = (pos, cls) => {
+  let h = `<span class="tira ${cls}" aria-hidden="true">`;
+  for (let i = 1; i <= 8; i++) h += `<i class="${pos === i ? "hit" : "nada"}"></i>`;
+  return h + "</span>";
+};
+const lista = $("#q-lista"), panel = $("#q-panel"), conteo = $("#q-conteo");
+let filtro = "*", texto = "", sel = null;
+
+function visibles(){
+  return D.gold.preguntas.filter(q => {
+    if (filtro === "soloA" && !(q.a8 && !q.b8)) return false;
+    if (filtro === "soloB" && !(q.b8 && !q.a8)) return false;
+    if (filtro === "ninguno" && (q.a8 || q.b8)) return false;
+    if (texto && !(q.pregunta + " " + q.span + " " + q.id).toLowerCase().includes(texto)) return false;
+    return true;
+  });
+}
+function pintaLista(){
+  const vs = visibles();
+  lista.innerHTML = vs.map(q => `
+    <button class="qfila" role="option" data-id="${q.id}" aria-selected="${sel===q.id}">
+      <span>
+        <span class="qid">${esc(q.id)} · ${esc(q.tipo)}</span>
+        <span class="qtx">${esc(q.pregunta)}</span>
+      </span>
+      <span style="display:flex;gap:.4rem;flex-direction:column">
+        ${tira(q.a8,"a")}${tira(q.b8,"b")}
+      </span>
+    </button>`).join("") || `<p class="chico dim" style="padding:1rem">No questions match that filter.</p>`;
+  const soloA = vs.filter(q=>q.a8&&!q.b8).length, soloB = vs.filter(q=>q.b8&&!q.a8).length;
+  conteo.textContent = `${vs.length} of 70 · only A: ${soloA} · only B: ${soloB}`;
+  lista.querySelectorAll(".qfila").forEach(b =>
+    b.addEventListener("click", () => { sel = b.dataset.id; pintaLista(); pintaPanel(); }));
+}
+function slotTxt(p){ return p ? `position ${p}` : "not found"; }
+function pintaPanel(){
+  const q = D.gold.preguntas.find(x => x.id === sel);
+  if (!q) return;
+  panel.innerHTML = `
+    <p class="mono chico dim">${esc(q.id)} · ${esc(q.tipo)}</p>
+    <h3 style="margin:.4rem 0 .9rem">${esc(q.pregunta)}</h3>
+    <p class="chico dim" style="margin-bottom:.35rem">Declared literal evidence · document ${esc(q.doc)}</p>
+    <div class="pasaje"><mark>${esc(q.span)}</mark></div>
+    <p class="chico dim" style="margin:.9rem 0 .5rem">${esc((D.gold.titulos[q.doc]||"").slice(0,110))}…</p>
+    <table style="margin-top:.6rem">
+      <tr><td><b style="color:var(--ink)">Lane A</b> <span class="chico dim">hand-built</span></td>
+          <td class="num">${slotTxt(q.a8)}</td></tr>
+      <tr><td><b style="color:var(--ink)">Lane B</b> <span class="chico dim">managed</span></td>
+          <td class="num">${slotTxt(q.b8)}</td></tr>
+      <tr><td class="chico dim">B, compared literally</td>
+          <td class="num chico dim">${q.b8_literal ? "position "+q.b8_literal : "fails on whitespace"}</td></tr>
+      <tr><td class="chico dim">with 16 slots · A / B</td>
+          <td class="num chico dim">${q.a16||"—"} / ${q.b16||"—"}</td></tr>
+    </table>`;
+}
+$("#q-buscar").addEventListener("input", e => { texto = e.target.value.toLowerCase(); pintaLista(); });
+document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
+  filtro = b.dataset.f;
+  document.querySelectorAll("[data-f]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+  pintaLista();
+}));
+pintaLista();
+sel = "q-00-01"; pintaLista(); pintaPanel();
+
+/* ── comparación de extractores, con el salto de línea visible ──────── */
+const spanA = D.gold.preguntas[0].span;
+$("#cmp-a").innerHTML = esc("…large corporations ") +
+  '<span class="salto">\\n</span>' + esc("may prioritize formal credentials…");
+$("#cmp-b").innerHTML = esc("…large corporations may prioritize formal credentials…");
+
+/* ── simulador de reparto de slots ──────────────────────────────────── */
+function evaluar(nA){
+  const nB = 8 - nA, slots = [];
+  let ia = 1, ib = 1;
+  while (slots.length < 8){
+    if (ia <= nA) slots.push(["a", ia++]);
+    if (slots.length < 8 && ib <= nB) slots.push(["b", ib++]);
+    if (ia > nA && ib > nB) break;
+  }
+  let ac = 0;
+  for (const q of D.gold.preguntas){
+    const pos = {a:q.a8, b:q.b8};
+    if (slots.some(([f,i]) => pos[f] === i)) ac++;
+  }
+  return ac;
+}
+const base = evaluar(8);
+function pintaSim(nA){
+  const ac = evaluar(nA), d = ac - base;
+  $("#sim-out").innerHTML = `
+    <div class="barra ${nA===8?"a":nA===0?"b":"gris"}">
+      <span class="etq mono">${nA}A + ${8-nA}B</span>
+      <span class="pista"><i style="width:${(ac/70*100).toFixed(1)}%"></i></span>
+      <span class="val">${ac}/70</span>
+    </div>
+    <p style="margin-top:.9rem;font-size:1.05rem">
+      <b class="mono" style="color:${d<0?"var(--mal)":d>0?"var(--ok)":"var(--ink)"}">
+        ${d>0?"+":""}${d}</b>
+      <span class="dim"> versus giving all 8 slots to the hand-built lane.</span>
+    </p>
+    <p class="chico dim" style="margin-top:.4rem">The union ceiling is 58. No split
+      reaches it, and none beats ${base}.</p>`;
+}
+$("#sl").addEventListener("input", e => pintaSim(+e.target.value));
+pintaSim(8);
+})();
+</script>
